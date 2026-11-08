@@ -28,7 +28,7 @@ const res=files.map(f=>{
   return {id, html:wrapHtml(h.trim()), notes:paras, bullets:(bullets[id]||[]).map(wrapText)};
 });
 // page-specific last slides go into their own small files, so the shared file never lists them
-const own=r=>/^08-/.test(r.id)&&r.id!=='08-thanks';
+const own=r=>r.id.startsWith('p-');
 const shared=res.filter(r=>!own(r));
 res.filter(own).forEach(r=>fs.writeFileSync(path.join(path.dirname(out),'zh-'+r.id+'.json'),JSON.stringify(r)));
 fs.writeFileSync(out, JSON.stringify(shared));

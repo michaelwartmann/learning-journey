@@ -1,7 +1,9 @@
 // Slide viewer: scroll mode with notes, plus a full-screen present mode.
-// A personal page sets window.PAGE='code' and gets its own last slide (08-code)
+// A personal page sets window.PAGE='code' and window.OWN=['02','08']: those slides come from p-code-NN
 const PAGE = (window.PAGE || '').toLowerCase().replace(/[^a-z0-9]/g,'');
-const SLIDES = ['01-cover','02-ladder','03-anki','04-problem','05-speed','06-people','07-trip', PAGE ? '08-'+PAGE : '08-thanks'];
+const OWN = PAGE ? (window.OWN || ['08']) : [];
+const SLIDES = ['01-cover','02-ladder','03-anki','04-problem','05-speed','06-people','07-trip','08-thanks']
+  .map(id=>OWN.includes(id.slice(0,2)) ? `p-${PAGE}-${id.slice(0,2)}` : id);
 const deck = document.getElementById('deck');
 let lang = (location.hash === '#en') ? 'en' : 'zh';
 let cache = {};          // lang -> [{html, notes}]
@@ -15,9 +17,9 @@ async function load(l){
   if(cache[l]) return cache[l];
   if(l==='zh'){
     const d = await (await fetch('slides/zh.json',{cache:'no-cache'})).json();
-    if(PAGE){ try{ d.push(await (await fetch(`slides/zh-08-${PAGE}.json`,{cache:'no-cache'})).json()); }catch(e){} }
+    for(const id of SLIDES.filter(x=>x.startsWith('p-'))){ try{ d.push(await (await fetch(`slides/zh-${id}.json`,{cache:'no-cache'})).json()); }catch(e){} }
     const byId = Object.fromEntries(d.map(s=>[s.id,s]));
-    return cache[l] = SLIDES.map(id=>byId[id]||byId['08-thanks']).map(s=>({html:s.html, notes:s.notes, bullets:s.bullets}));
+    return cache[l] = SLIDES.map((id,i)=>byId[id]||d[i]).map(s=>({html:s.html, notes:s.notes, bullets:s.bullets}));
   }
   const out = await Promise.all(SLIDES.map(async id=>{
     const t = await (await fetch(`slides/${l}/${id}.html`,{cache:'no-cache'})).text();
