@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex">
+<base href="../../">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>一步一步 · Step by Step — a Mandarin learning journey</title>
+<meta name="description" content="One learner's road to HSK, told in eight slides with notes in Chinese, pinyin and English. Free tools and resources.">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;700&family=Noto+Serif:wght@500;700;900&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@500;700;900&family=Ma+Shan+Zheng&family=Source+Serif+4:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="deck.css">
+</head>
+<body>
+<header class="top">
+  <a class="brand" href="p/xqgk/"><span class="zh">一步一步</span> Step by Step</a>
+  <nav>
+    <a href="p/xqgk/" class="on">The talk</a>
+    <a href="resources.html">Resources</a>
+  </nav>
+</header>
+
+<section class="intro">
+  <h1>My Mandarin roadmap, <span class="zh">一步一步</span></h1>
+  <p>Eight slides about learning Chinese with real people, flashcards and AI. Read them at your own pace: in Chinese mode each slide has the key points beside it, and you can point at (or tap) any character to see its pinyin; switch to All English if you don't read Chinese. Everything I built along the way is free on the <a href="resources.html">Resources</a> page.</p>
+  <div class="controls">
+    <div class="seg" role="group" aria-label="Language">
+      <button data-lang="zh" class="on">中文 · hover for pinyin</button><button data-lang="en">All English</button>
+    </div>
+    
+    <button class="btn" id="present">▶ Present</button>
+    <button class="btn" id="playall" hidden>🔊 Listen from the start</button>
+  </div>
+</section>
+
+<main id="deck"></main>
+
+<div id="show" hidden>
+  <div class="showstage"><div class="stage"></div></div>
+  <div class="showbar">
+    <button class="btn" id="prev">‹</button>
+    <span id="count"></span>
+    <button class="btn" id="next">›</button>
+    <button class="btn" id="showaudio" hidden>🔊</button>
+    <button class="btn" id="close">✕ Close</button>
+  </div>
+</div>
+
+<footer>
+  <p>A personal, non-commercial learning journal. Illustrations made with an AI image model. Not affiliated with any exam body.</p>
+  <p><a href="resources.html">Resources</a> ·</p>
+</footer>
+<script async src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.7.3/dist/hanzi-writer.min.js" onload="window.initWritersAll&&initWritersAll()"></script>
+<script>window.PAGE='xqgk'</script>
+<script src="deck.js"></script>
+</body>
+</html>

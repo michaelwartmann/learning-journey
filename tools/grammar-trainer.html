@@ -1,0 +1,594 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>HSK 3 Grammar Trainer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@500;700;900&family=Noto+Sans+SC:wght@400;500;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+/* Same visual language as the reading trainer. Always black on white. */
+:root{
+  --paper:#F3F4EF; --sheet:#FFFFFF; --ink:#1B2430; --muted:#5E6670; --rule:#D9DCD3;
+  --seal:#B4232F; --seal-soft:#F6E3E4; --jade:#2C7A55; --jade-soft:#E1F0E8; --amber:#B8661E; --amber-soft:#F7EADB;
+  --hanzi:'Noto Serif SC','Songti SC','SimSun',serif;
+  --ui:'Noto Sans SC','PingFang SC','Microsoft YaHei',system-ui,sans-serif;
+  --mono:'IBM Plex Mono',ui-monospace,'SF Mono',Menlo,monospace;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--ui);font-size:15px;line-height:1.55;padding:0 16px 56px}
+.wrap{max-width:860px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+header{padding-top:28px;display:flex;flex-direction:column;gap:6px}
+h1{font-family:var(--hanzi);font-weight:900;font-size:clamp(28px,6vw,40px);line-height:1.15;margin:0}
+.lede{color:var(--muted);margin:0;max-width:62ch}
+.tabs{display:flex;flex-wrap:wrap;gap:8px}
+.tab{font:inherit;font-weight:500;border:1px solid var(--rule);background:var(--sheet);color:var(--ink);padding:8px 14px;border-radius:999px;cursor:pointer}
+.tab[aria-selected="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.card{background:var(--sheet);border:1px solid var(--rule);border-radius:14px;padding:18px 20px;display:flex;flex-direction:column;gap:12px}
+.modhead h2{font-family:var(--hanzi);font-size:24px;margin:0}
+.modhead p{margin:0;color:var(--muted)}
+.exam{font-family:var(--mono);font-size:12px;color:var(--seal);letter-spacing:.02em}
+.points{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px}
+.pt{font:inherit;text-align:left;border:1px solid var(--rule);background:var(--sheet);color:var(--ink);border-radius:12px;padding:12px 14px;cursor:pointer;display:flex;flex-direction:column;gap:4px}
+.pt:hover{border-color:var(--ink)}
+.pt .id{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.pt .cn{font-family:var(--hanzi);font-size:19px;font-weight:700}
+.pt .en{font-size:13px;color:var(--muted);line-height:1.35}
+.bar{height:6px;border-radius:3px;background:var(--rule);overflow:hidden;margin-top:6px}
+.bar i{display:block;height:100%;background:var(--jade)}
+.pt .st{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.btn{font:inherit;font-weight:600;border:1px solid var(--ink);background:var(--ink);color:var(--paper);padding:8px 16px;border-radius:8px;cursor:pointer}
+.btn.ghost{background:transparent;color:var(--ink);border-color:var(--rule)}
+.btn:disabled{opacity:.4;cursor:default}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.formula{font-family:var(--hanzi);font-size:19px;font-weight:700;background:var(--paper);border-radius:10px;padding:10px 14px;line-height:1.5}
+.lbl{font-family:var(--mono);font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:0}
+.ex{display:flex;flex-direction:column;gap:2px;border-left:3px solid var(--rule);padding-left:12px}
+.hz{font-family:var(--hanzi);font-size:21px;line-height:1.6}
+.py{color:var(--ink);font-size:14px}
+.en2{color:var(--muted);font-size:14px}
+.drill{gap:14px}
+.kind{font-family:var(--mono);font-size:12px;color:var(--seal)}
+.q{font-family:var(--hanzi);font-size:22px;line-height:1.65}
+.q .blank{display:inline-block;min-width:2.6em;border-bottom:2px solid var(--ink);text-align:center;font-weight:700;color:var(--seal)}
+.line{display:block}
+.ask{font-family:var(--hanzi);font-size:19px;font-weight:700}
+.opts{display:flex;flex-direction:column;gap:8px}
+.opt{font:inherit;text-align:left;display:flex;gap:10px;align-items:baseline;border:1.5px solid var(--rule);background:var(--sheet);color:var(--ink);border-radius:10px;padding:10px 14px;cursor:pointer}
+.opt .k{font-family:var(--mono);font-weight:600;color:var(--seal);min-width:1.4ch}
+.opt .t{font-family:var(--hanzi);font-size:20px;line-height:1.5}
+.opt.ok{border-color:var(--jade);background:var(--jade-soft)}
+.opt.no{border-color:var(--seal);background:var(--seal-soft)}
+.opts.gapopts{flex-direction:row;flex-wrap:wrap}
+.opts.gapopts .opt{min-width:90px;justify-content:center}
+.tiles,.built{display:flex;flex-wrap:wrap;gap:8px;min-height:46px}
+.built{border:1.5px dashed var(--rule);border-radius:10px;padding:8px}
+.tile{font-family:var(--hanzi);font-size:20px;border:1.5px solid var(--rule);background:var(--paper);color:var(--ink);border-radius:8px;padding:6px 12px;cursor:pointer}
+.tile.used{visibility:hidden}
+.built .tile{background:var(--sheet);border-color:var(--ink)}
+.fb{border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:4px}
+.fb.ok{background:var(--jade-soft)} .fb.no{background:var(--seal-soft)}
+.fb b{font-size:15px}
+.note{font-size:14px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.clock{font-family:var(--mono);font-weight:600;font-size:22px;font-variant-numeric:tabular-nums}
+.big{font-family:var(--mono);font-size:22px;font-weight:600}
+table{border-collapse:collapse;width:100%;font-size:14px}
+td,th{border-bottom:1px solid var(--rule);padding:6px 4px;text-align:left;vertical-align:top}
+th{font-family:var(--mono);font-size:12px;color:var(--muted);font-weight:500}
+.hzs{font-family:var(--hanzi);font-size:16px}
+.howto li{margin-bottom:6px}
+.link{background:none;border:0;padding:0;font:inherit;color:var(--ink);text-decoration:underline;cursor:pointer}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>三级语法 · HSK 3 grammar</h1>
+  <p class="lede">25 grammar points, each drilled in the formats the exam uses: 排序 (writing 1), 填空 (reading 2), 配对 with the reply given (reading 1) and 什么意思 (listening and reading 3). Sentences match real HSK 3 length and grammar density.</p>
+</header>
+<nav class="tabs" id="tabs" role="tablist"></nav>
+<main id="main"></main>
+</div>
+<script>
+const MODS = [
+ {id:"A", cn:"语序", en:"Word order", exam:"书写 1 · 阅读 2", why:"Writing Part 1 is pure word order, and Reading Part 2 asks which word fits a slot. Both reward knowing where each kind of word sits."},
+ {id:"B", cn:"关联词", en:"Connectors", exam:"阅读 1 · 阅读 3 · 听力", why:"Real Part 1 pairs are often linked by logic (所以, 但是, 而且), not by a question and its answer. Connectors also tell you which half of a sentence the question is about."},
+ {id:"C", cn:"时间与语气", en:"Time, aspect & hidden meaning", exam:"听力 2/4 · 阅读 1", why:"Most of your listening misses needed one step of inference: 马上就好, 还差一点儿, 才, 就是. These small words carry the meaning."},
+ {id:"D", cn:"填空词性", en:"Gap-fill by word class", exam:"阅读 2", why:"In Reading Part 2 the words around the blank tell you the word class before you know the meaning: a number wants a measure word, 很 wants an adjective."}
+];
+
+const P = [
+// ───────── A 语序
+{id:"A1", mod:"A", cn:"把字句", title:"把: doing something to a thing",
+ formula:"S + 把 + thing + verb + where/result (+ 了)",
+ why:"把 puts the object before the verb so you can say what happened to it. The verb never stands alone: it needs a place (在/到), a result (完/好/干净) or a direction after it.",
+ signal:"Tiles contain 把 → find the thing, then put verb + 在/到/完 right after it. 已经/没/都 go before 把.",
+ ex:[["我把牛奶放在桌子上了，你自己拿吧。","Wǒ bǎ niúnǎi fàng zài zhuōzi shang le, nǐ zìjǐ ná ba.","I've put the milk on the table; help yourself."],
+     ["吃完饭以后，请把碗和盘子洗干净。","Chī wán fàn yǐhòu, qǐng bǎ wǎn hé pánzi xǐ gānjìng.","After the meal, please wash the bowls and plates clean."]],
+ dr:[
+  {t:"order", tiles:["你","把护照","放在哪儿","了"], ans:["你把护照放在哪儿了"], end:"？", py:"Nǐ bǎ hùzhào fàng zài nǎr le?", en:"Where did you put your passport?", note:"把 + thing + verb + 在 + place. 了 closes the sentence."},
+  {t:"order", tiles:["我","已经","把作业","写完了"], ans:["我已经把作业写完了"], end:"。", py:"Wǒ yǐjīng bǎ zuòyè xiě wán le.", en:"I've already finished my homework.", note:"Adverbs like 已经 go before 把, not after it."},
+  {t:"gap", q:"天这么热，你___这些水果都放进冰箱里吧，晚上再吃。", o:["把","被","跟","从"], a:0, py:"Tiān zhème rè, nǐ bǎ zhèxiē shuǐguǒ dōu fàng jìn bīngxiāng li ba, wǎnshang zài chī.", en:"It's so hot; put all this fruit in the fridge and we'll eat it tonight.", note:"You do something to the fruit (put it somewhere) → 把. 被 would mean the fruit did it to you."}
+ ]},
+{id:"A2", mod:"A", cn:"被字句", title:"被: something happened to it",
+ formula:"thing + 被 + (who) + verb + result/了",
+ why:"被 marks the passive. The subject is the thing that was affected; the doer comes right after 被. Like 把, the verb needs something after it (了, 走, 完, 坏).",
+ signal:"A thing at the start and a person after 被. Often bad news: 被偷, 被拿走, 被吃完.",
+ ex:[["我的自行车被弟弟骑走了，我只能走路去学校。","Wǒ de zìxíngchē bèi dìdi qí zǒu le, wǒ zhǐ néng zǒulù qù xuéxiào.","My little brother rode off on my bike, so I have to walk to school."],
+     ["这个问题已经被经理解决了，你不用担心。","Zhège wèntí yǐjīng bèi jīnglǐ jiějué le, nǐ búyòng dānxīn.","The manager has already solved this problem; don't worry."]],
+ dr:[
+  {t:"order", tiles:["桌子上的蛋糕","被","孩子们","吃完了"], ans:["桌子上的蛋糕被孩子们吃完了"], end:"。", py:"Zhuōzi shang de dàngāo bèi háizimen chī wán le.", en:"The kids ate up the cake on the table.", note:"Thing + 被 + who + verb + result."},
+  {t:"gap", q:"我的词典___同学借走了，他说明天才能还给我。", o:["被","把","对","从"], a:0, py:"Wǒ de cídiǎn bèi tóngxué jiè zǒu le, tā shuō míngtiān cái néng huán gěi wǒ.", en:"A classmate borrowed my dictionary; he says he can only give it back tomorrow.", note:"The dictionary is the thing affected, the classmate is the doer → 被."},
+  {t:"mean", q:"女：冰箱里的西瓜呢？|男：被弟弟吃完了，我下午再去买一个吧。", ask:"西瓜怎么了？", o:["被吃完了","还在冰箱里","下午才买"], a:0, py:"Nǚ: Bīngxiāng li de xīguā ne? Nán: Bèi dìdi chī wán le, wǒ xiàwǔ zài qù mǎi yí ge ba.", en:"W: Where's the watermelon from the fridge? M: My brother ate it all; I'll buy another this afternoon.", note:"被弟弟吃完了 = it's gone. 下午再去买 is a trap: that's a new one."}
+ ]},
+{id:"A3", mod:"A", cn:"时间地点在前", title:"Time and place come first",
+ formula:"S + time + place + verb · place + 有 + thing",
+ why:"Chinese puts when and where before the action, never at the end. To say what is somewhere, the place opens the sentence: 冰箱里有…, 门口站着….",
+ signal:"A tile like 每天早上 or 在公园里 goes right after the subject (or before it), never last. A place tile + 有 → place first.",
+ ex:[["我们明天下午三点在学校门口见吧。","Wǒmen míngtiān xiàwǔ sān diǎn zài xuéxiào ménkǒu jiàn ba.","Let's meet tomorrow at three at the school gate."],
+     ["桌子上有一本关于中国历史的书，是谁的？","Zhuōzi shang yǒu yì běn guānyú Zhōngguó lìshǐ de shū, shì shéi de?","There's a book on Chinese history on the table. Whose is it?"]],
+ dr:[
+  {t:"order", tiles:["我","每天早上","在公园里","跑步"], ans:["我每天早上在公园里跑步","每天早上我在公园里跑步"], end:"。", py:"Wǒ měi tiān zǎoshang zài gōngyuán li pǎobù.", en:"I run in the park every morning.", note:"Who → when → where → what."},
+  {t:"order", tiles:["教室里","一个人","都","没有"], ans:["教室里一个人都没有"], end:"。", py:"Jiàoshì li yí ge rén dōu méiyǒu.", en:"There's nobody at all in the classroom.", note:"Place first. 一个人都没有 = not a single person: 都 comes before the verb."},
+  {t:"order", tiles:["我妹妹","下个月","要","去北京学习"], ans:["我妹妹下个月要去北京学习","下个月我妹妹要去北京学习"], end:"。", py:"Wǒ mèimei xià ge yuè yào qù Běijīng xuéxí.", en:"My younger sister is going to study in Beijing next month.", note:"Time before 要 + verb."}
+ ]},
+{id:"A4", mod:"A", cn:"副词的位置", title:"都, 也, 还, 又, 一直: before the verb",
+ formula:"S + 也/都/还/又/一直/经常 + verb/adjective",
+ why:"Adverbs sit between the subject and the verb. With two adverbs the order is fixed: 也都, 都已经, 还没.",
+ signal:"Find the verb or adjective, put the adverb tile directly in front of it. 了 still goes at the end.",
+ ex:[["冬天到了，我们班的同学差不多都感冒了。","Dōngtiān dào le, wǒmen bān de tóngxué chàbuduō dōu gǎnmào le.","Winter is here, and almost everyone in our class has caught a cold."],
+     ["我们一家人也都去过上海，那儿的变化真大。","Wǒmen yì jiā rén yě dōu qù guo Shànghǎi, nàr de biànhuà zhēn dà.","Our whole family has been to Shanghai too; it's changed so much."]],
+ dr:[
+  {t:"order", tiles:["这些衣服","都","洗干净","了"], ans:["这些衣服都洗干净了"], end:"。", py:"Zhèxiē yīfu dōu xǐ gānjìng le.", en:"These clothes have all been washed clean.", note:"都 before the verb, 了 at the end."},
+  {t:"order", tiles:["他","今天","又","迟到了"], ans:["他今天又迟到了","今天他又迟到了"], end:"。", py:"Tā jīntiān yòu chídào le.", en:"He was late again today.", note:"Time, then 又, then the verb."},
+  {t:"gap", q:"你们先回去吧，我___有一点儿工作没做完，做完就走。", o:["还","再","又","才"], a:0, py:"Nǐmen xiān huíqu ba, wǒ hái yǒu yìdiǎnr gōngzuò méi zuò wán, zuò wán jiù zǒu.", en:"You go back first; I still have a bit of work to finish and I'll leave when it's done.", note:"还有 = still have (something left). 再 and 又 mean again."}
+ ]},
+{id:"A5", mod:"A", cn:"得·的·地", title:"得 after the verb, 地 before it, 的 before nouns",
+ formula:"verb + 得 + how · how + 地 + verb · description + 的 + noun",
+ why:"All three are de, so listening won't help. Reading and writing will: look at what comes right after.",
+ signal:"After the blank: an adjective describing the action → 得. A verb → 地. A noun → 的.",
+ ex:[["他跑得比我快多了，每次比赛都是第一。","Tā pǎo de bǐ wǒ kuài duō le, měi cì bǐsài dōu shì dì-yī.","He runs much faster than me and comes first in every race."],
+     ["请你认真地回答我的问题。","Qǐng nǐ rènzhēn de huídá wǒ de wèntí.","Please answer my question seriously."]],
+ dr:[
+  {t:"gap", q:"他昨天晚上睡___太晚了，所以今天上课的时候一直想睡觉。", o:["得","的","地","着"], a:0, py:"Tā zuótiān wǎnshang shuì de tài wǎn le, suǒyǐ jīntiān shàngkè de shíhou yìzhí xiǎng shuìjiào.", en:"He went to bed too late last night, so he kept wanting to sleep in class today.", note:"Verb (睡) + 得 + how (太晚)."},
+  {t:"gap", q:"孩子们高高兴兴___跑进教室，告诉老师他们得了第一名。", o:["地","得","的","了"], a:0, py:"Háizimen gāogāoxìngxìng de pǎo jìn jiàoshì, gàosu lǎoshī tāmen dé le dì-yī míng.", en:"The children ran happily into the classroom to tell the teacher they'd come first.", note:"How (高高兴兴) + 地 + verb (跑)."},
+  {t:"order", tiles:["你的字","写得","真","漂亮"], ans:["你的字写得真漂亮"], end:"！", py:"Nǐ de zì xiě de zhēn piàoliang!", en:"Your handwriting is really beautiful!", note:"Thing + verb + 得 + how."}
+ ]},
+{id:"A6", mod:"A", cn:"结果·趋向补语", title:"Results and directions after the verb",
+ formula:"verb + 完/好/懂/见/到/错 · verb + 出来/起来/回来/进去",
+ why:"The second part tells you whether the action succeeded: 看 (look) vs 看见 (see), 听 vs 听懂. Many listening answers hinge on it.",
+ signal:"没 + verb + result = tried but didn't succeed. 想起来 = remember, 看出来 = tell by looking.",
+ ex:[["老师说得太快了，我听了两次才听懂。","Lǎoshī shuō de tài kuài le, wǒ tīng le liǎng cì cái tīng dǒng.","The teacher spoke too fast; I only understood after hearing it twice."],
+     ["他从行李箱里拿出来一本旧书，说是爷爷送给他的。","Tā cóng xínglixiāng li ná chūlai yì běn jiù shū, shuō shì yéye sòng gěi tā de.","He took an old book out of his suitcase and said his grandpa gave it to him."]],
+ dr:[
+  {t:"gap", q:"我看___了，医院门口那个穿白衬衫的人就是马医生。", o:["见","完","会","开"], a:0, py:"Wǒ kàn jiàn le, yīyuàn ménkǒu nàge chuān bái chènshān de rén jiù shì Mǎ yīshēng.", en:"I can see him: the man in the white shirt at the hospital entrance is Dr Ma.", note:"看见 = look and actually see."},
+  {t:"gap", q:"这道题我想了半天也没想___，你能帮我看看吗？", o:["出来","起来","下去","过来"], a:0, py:"Zhè dào tí wǒ xiǎng le bàntiān yě méi xiǎng chūlai, nǐ néng bāng wǒ kànkan ma?", en:"I've thought about this question for ages and can't work it out. Can you look at it?", note:"想出来 = come up with (an answer). 想起来 = remember something you knew."},
+  {t:"order", tiles:["我","还没","写完","今天的作业"], ans:["我还没写完今天的作业"], end:"。", py:"Wǒ hái méi xiě wán jīntiān de zuòyè.", en:"I haven't finished today's homework yet.", note:"还没 + verb + result + object."}
+ ]},
+{id:"A7", mod:"A", cn:"可能补语", title:"Can or can't: 听得懂 / 听不懂",
+ formula:"verb + 得/不 + result",
+ why:"听不懂, 看不清楚, 找不到, 吃不完 say whether something is possible. They're everywhere in listening and Part 1 replies.",
+ signal:"不 in the middle of verb + result = can't manage it. 得 in the middle = can.",
+ ex:[["菜点得太多了，我们两个人一定吃不完。","Cài diǎn de tài duō le, wǒmen liǎng ge rén yídìng chī bu wán.","We ordered too many dishes; the two of us can't possibly finish them."],
+     ["我坐得太远了，黑板上的字看不清楚。","Wǒ zuò de tài yuǎn le, hēibǎn shang de zì kàn bu qīngchu.","I'm sitting too far away; I can't read the words on the board clearly."]],
+ dr:[
+  {t:"mean", q:"男：黑板上的字你看得清楚吗？|女：我坐得太远了，看不清楚。", ask:"女的是什么意思？", o:["字写得太小","她离黑板太远","她不想看"], a:1, py:"Nán: Hēibǎn shang de zì nǐ kàn de qīngchu ma? Nǚ: Wǒ zuò de tài yuǎn le, kàn bu qīngchu.", en:"M: Can you read the board clearly? W: I'm sitting too far away; I can't.", note:"看不清楚 because of 太远. The text doesn't say the writing is small."},
+  {t:"gap", q:"奇怪，我的钱包刚才还在包里，现在怎么找___了？", o:["不到","不完","不懂","不会"], a:0, py:"Qíguài, wǒ de qiánbāo gāngcái hái zài bāo li, xiànzài zěnme zhǎo bu dào le?", en:"Strange, my wallet was in my bag a moment ago. Why can't I find it now?", note:"找不到 = look but can't find."},
+  {t:"match", q:"没关系，吃不完可以带回家，明天中午再吃。", o:["我们是不是点得太多了？","你最喜欢吃什么菜？","我们几点去吃饭？"], a:0, py:"Wǒmen shì bu shì diǎn de tài duō le? — Méi guānxi, chī bu wán kěyǐ dài huí jiā, míngtiān zhōngwǔ zài chī.", en:"Did we order too much? — No problem, whatever we can't finish we can take home.", note:"This sentence is a reply. Ask: what would make someone say 吃不完? Too much food."}
+ ]},
+{id:"A8", mod:"A", cn:"比较句", title:"Comparing: 比, 没有, 跟…一样",
+ formula:"A 比 B + adj (+ 一点儿/多了/得多) · A 没有 B + adj · A 跟 B 一样 + adj",
+ why:"In a 比 sentence the adjective stands bare: no 很, no 非常. The amount (一点儿, 多了) comes after it.",
+ signal:"比 in the tiles → adj + 一点儿 at the end. 没有 B + adj means A is less.",
+ ex:[["今天比昨天冷多了，你多穿一件衣服吧。","Jīntiān bǐ zuótiān lěng duō le, nǐ duō chuān yí jiàn yīfu ba.","Today is much colder than yesterday; put on another layer."],
+     ["我妹妹没有我高，但是她跑得比我快。","Wǒ mèimei méiyǒu wǒ gāo, dànshì tā pǎo de bǐ wǒ kuài.","My sister isn't as tall as me, but she runs faster than me."]],
+ dr:[
+  {t:"order", tiles:["他","比我弟弟","矮","一点儿"], ans:["他比我弟弟矮一点儿"], end:"。", py:"Tā bǐ wǒ dìdi ǎi yìdiǎnr.", en:"He's a bit shorter than my little brother.", note:"比 + B + adjective + 一点儿. Your 29 Oct error put 一点儿 before 矮."},
+  {t:"gap", q:"冬天到了，白天的时间比夏天___多了。", o:["短","很短","非常短","太短"], a:0, py:"Dōngtiān dào le, báitiān de shíjiān bǐ xiàtiān duǎn duō le.", en:"Winter is here, and the days are much shorter than in summer.", note:"No 很/非常/太 in a 比 sentence; the amount comes after: 短多了."},
+  {t:"mean", q:"我和哥哥差不多高，但是他比我瘦，也比我年轻两岁。", ask:"关于哥哥，可以知道什么？", o:["比他高很多","比他瘦","比他大两岁"], a:1, py:"Wǒ hé gēge chàbuduō gāo, dànshì tā bǐ wǒ shòu, yě bǐ wǒ niánqīng liǎng suì.", en:"My brother and I are about the same height, but he's thinner than me and two years younger.", note:"他比我瘦 → thinner. 比我年轻 means younger, so 比他大 is the trap."}
+ ]},
+// ───────── B 关联词
+{id:"B1", mod:"B", cn:"虽然…但是", title:"Although…, but… (the point is after 但是)",
+ formula:"虽然 A，但是/可是 B（还是…）",
+ why:"The question almost always asks about the 但是 part. 虽然 introduces the less important fact.",
+ signal:"In listening: hear 虽然 → wait for 但是, that's the answer. 还是 after 但是 = still, anyway.",
+ ex:[["虽然这个帽子有点儿旧了，但是我还是很喜欢。","Suīrán zhège màozi yǒudiǎnr jiù le, dànshì wǒ háishi hěn xǐhuan.","This hat is a bit old, but I still like it a lot."],
+     ["虽然外面下着雨，但是孩子们还是想出去玩儿。","Suīrán wàimiàn xià zhe yǔ, dànshì háizimen háishi xiǎng chūqu wánr.","Although it's raining outside, the kids still want to go out and play."]],
+ dr:[
+  {t:"mean", q:"这件衬衫虽然有点儿贵，但是颜色和大小都很好，我就买了。", ask:"他觉得那件衬衫：", o:["太贵了，没买","很满意","颜色不好看"], a:1, py:"Zhè jiàn chènshān suīrán yǒudiǎnr guì, dànshì yánsè hé dàxiǎo dōu hěn hǎo, wǒ jiù mǎi le.", en:"This shirt is a bit pricey, but the colour and size are both good, so I bought it.", note:"The 但是 part decides: colour and size good → bought → satisfied."},
+  {t:"gap", q:"___今天下了很大的雨，但是比赛还是在下午三点开始了。", o:["虽然","因为","如果","所以"], a:0, py:"Suīrán jīntiān xià le hěn dà de yǔ, dànshì bǐsài háishi zài xiàwǔ sān diǎn kāishǐ le.", en:"Although it rained heavily today, the match still started at 3 pm.", note:"但是 later in the sentence → 虽然 at the start."},
+  {t:"match", q:"虽然有点儿远，但是那儿的菜特别好吃，你去了就知道了。", o:["我们为什么要去那么远的饭馆？","你今天想吃米饭还是面条？","那个饭馆几点关门？"], a:0, py:"Wǒmen wèishénme yào qù nàme yuǎn de fànguǎn? — Suīrán yǒudiǎnr yuǎn, dànshì nàr de cài tèbié hǎochī.", en:"Why do we have to go to such a far-away restaurant? — It is a bit far, but the food there is excellent.", note:"The reply admits 远 and gives a reason: it answers a 为什么 about the distance."}
+ ]},
+{id:"B2", mod:"B", cn:"因为…所以", title:"Because…, so… (cause first)",
+ formula:"因为 A，所以 B · A，所以 B",
+ why:"In real Part 1, a sentence starting with 所以 is never a reply to a question: it continues another sentence. Find the cause.",
+ signal:"所以 at the start → its partner is a cause (traffic jam, rain, delay). 为什么 questions → answer with 因为.",
+ ex:[["因为路上车太多，所以我们花了一个多小时才到。","Yīnwèi lù shang chē tài duō, suǒyǐ wǒmen huā le yí ge duō xiǎoshí cái dào.","There was so much traffic that it took us over an hour to get here."],
+     ["他昨天发烧了，所以今天没来上课。","Tā zuótiān fāshāo le, suǒyǐ jīntiān méi lái shàngkè.","He had a fever yesterday, so he didn't come to class today."]],
+ dr:[
+  {t:"match", q:"所以我们到宾馆的时候，已经是晚上十二点了。", o:["我们的飞机晚了两个多小时。","这家宾馆在北京很有名。","你们打算在那儿住几天？"], a:0, py:"Wǒmen de fēijī wǎn le liǎng ge duō xiǎoshí. Suǒyǐ wǒmen dào bīnguǎn de shíhou, yǐjīng shì wǎnshang shí'èr diǎn le.", en:"Our plane was over two hours late, so it was midnight when we got to the hotel.", note:"所以 continues a story: look for the cause, not a question."},
+  {t:"gap", q:"小王昨天晚上一直发烧，___今天早上去医院了。", o:["所以","但是","如果","而且"], a:0, py:"Xiǎo Wáng zuótiān wǎnshang yìzhí fāshāo, suǒyǐ jīntiān zǎoshang qù yīyuàn le.", en:"Xiao Wang had a fever all night, so he went to the hospital this morning.", note:"Cause (fever) → result (hospital) = 所以."},
+  {t:"mean", q:"女：你怎么没坐地铁？|男：因为地铁站离我家太远了，我一般骑自行车上班。", ask:"男的为什么不坐地铁？", o:["地铁太贵","地铁站太远","他不会骑车"], a:1, py:"Nǚ: Nǐ zěnme méi zuò dìtiě? Nán: Yīnwèi dìtiězhàn lí wǒ jiā tài yuǎn le, wǒ yìbān qí zìxíngchē shàngbān.", en:"W: Why didn't you take the underground? M: Because the station is too far from my home; I usually cycle to work.", note:"The reason sits right after 因为."}
+ ]},
+{id:"B3", mod:"B", cn:"如果…就", title:"If…, then…",
+ formula:"如果 A（的话），（S）就 B",
+ why:"如果 sets a condition; 就 comes after the subject in the second half. Questions often ask what is true now (the condition isn't).",
+ signal:"如果 + not-yet-true situation. 就 goes after the subject: 我们就去, not 就我们去.",
+ ex:[["如果明天不下雨，我们就去爬山。","Rúguǒ míngtiān bú xià yǔ, wǒmen jiù qù pá shān.","If it doesn't rain tomorrow, we'll go hiking."],
+     ["你如果真的喜欢这本书，我可以借给你。","Nǐ rúguǒ zhēn de xǐhuan zhè běn shū, wǒ kěyǐ jiè gěi nǐ.","If you really like this book, I can lend it to you."]],
+ dr:[
+  {t:"gap", q:"___你下午有时间的话，就来我家帮我搬一下桌子吧。", o:["如果","虽然","因为","除了"], a:0, py:"Rúguǒ nǐ xiàwǔ yǒu shíjiān dehuà, jiù lái wǒ jiā bāng wǒ bān yíxià zhuōzi ba.", en:"If you have time this afternoon, come over and help me move a table.", note:"…的话 + 就 = a condition → 如果."},
+  {t:"order", tiles:["如果你累了","我们","就","休息一下吧"], ans:["如果你累了我们就休息一下吧"], end:"。", py:"Rúguǒ nǐ lèi le, wǒmen jiù xiūxi yíxià ba.", en:"If you're tired, let's take a break.", note:"就 comes after the subject 我们."},
+  {t:"mean", q:"男：如果下午还没有电，我们就去图书馆学习吧。|女：好，我先把书准备好。", ask:"现在怎么了？", o:["家里没有电","图书馆关门了","外面在下雨"], a:0, py:"Nán: Rúguǒ xiàwǔ hái méiyǒu diàn, wǒmen jiù qù túshūguǎn xuéxí ba. Nǚ: Hǎo, wǒ xiān bǎ shū zhǔnbèi hǎo.", en:"M: If there's still no power this afternoon, let's study at the library. W: OK, I'll get the books ready.", note:"还没有电 = the power is out now."}
+ ]},
+{id:"B4", mod:"B", cn:"不但…而且", title:"Not only…, but also…",
+ formula:"不但 A，而且/还 B",
+ why:"Both halves are true and point the same way. A question may ask about either half.",
+ signal:"而且 or 还 in the second half → look for 不但 (or a first positive point) before it.",
+ ex:[["这个房间不但很大，而且很安静。","Zhège fángjiān búdàn hěn dà, érqiě hěn ānjìng.","This room is not only big but also quiet."],
+     ["她不但会说英语，还会说一点儿日语。","Tā búdàn huì shuō Yīngyǔ, hái huì shuō yìdiǎnr Rìyǔ.","She speaks not only English but also a little Japanese."]],
+ dr:[
+  {t:"gap", q:"睡觉前玩儿手机不但对眼睛不好，___会影响第二天的工作。", o:["而且","但是","所以","或者"], a:0, py:"Shuìjiào qián wánr shǒujī búdàn duì yǎnjing bù hǎo, érqiě huì yǐngxiǎng dì-èr tiān de gōngzuò.", en:"Using your phone before bed is not only bad for your eyes but also affects the next day's work.", note:"不但 … 而且: two negative points in the same direction."},
+  {t:"order", tiles:["他","不但会做饭","而且","做得很好吃"], ans:["他不但会做饭而且做得很好吃"], end:"。", py:"Tā búdàn huì zuò fàn, érqiě zuò de hěn hǎochī.", en:"He can not only cook, he cooks really well.", note:"Subject first, then 不但 … 而且 …."},
+  {t:"mean", q:"这家宾馆不但离火车站很近，而且早饭也不错，就是房间有点儿小。", ask:"那家宾馆：", o:["房间很大","离火车站近","没有早饭"], a:1, py:"Zhè jiā bīnguǎn búdàn lí huǒchēzhàn hěn jìn, érqiě zǎofàn yě bú cuò, jiùshì fángjiān yǒudiǎnr xiǎo.", en:"This hotel is close to the station and breakfast is good too; it's just that the rooms are a bit small.", note:"不但 part: close to the station. 就是 adds the one drawback."}
+ ]},
+{id:"B5", mod:"B", cn:"一边…一边 · 先…然后", title:"At the same time · first…, then…",
+ formula:"一边 V1，一边 V2 · 先 V1，然后/再 V2",
+ why:"一边…一边 = two actions at once. 先…然后 = an order of steps; listening questions ask 先 做什么 or 接下来 做什么.",
+ signal:"接下来/然后 in the question → find the step after the one happening now.",
+ ex:[["他一边看菜单，一边跟服务员说话。","Tā yìbiān kàn càidān, yìbiān gēn fúwùyuán shuōhuà.","He talked to the waiter while looking at the menu."],
+     ["我们先坐公共汽车，然后换地铁，一个小时就到了。","Wǒmen xiān zuò gōnggòng qìchē, ránhòu huàn dìtiě, yí ge xiǎoshí jiù dào le.","We take the bus first, then change to the underground; it takes an hour."]],
+ dr:[
+  {t:"match", q:"对，我习惯一边听音乐一边跑步，这样不会觉得累。", o:["你跑步的时候也听音乐吗？","你每天几点去跑步？","你喜欢听什么音乐？"], a:0, py:"Nǐ pǎobù de shíhou yě tīng yīnyuè ma? — Duì, wǒ xíguàn yìbiān tīng yīnyuè yìbiān pǎobù.", en:"Do you listen to music when you run? — Yes, I'm used to running and listening at the same time.", note:"对 at the start answers a yes/no question about doing both at once."},
+  {t:"order", tiles:["我们","先吃饭","然后","去看电影吧"], ans:["我们先吃饭然后去看电影吧"], end:"。", py:"Wǒmen xiān chī fàn, ránhòu qù kàn diànyǐng ba.", en:"Let's eat first and then go to the cinema.", note:"先 + step 1 + 然后 + step 2."},
+  {t:"mean", q:"男：周末去动物园的人多，我先在网上把票买好。|女：好的，我去准备孩子的东西。", ask:"男的接下来最可能做什么？", o:["买票","去动物园","准备东西"], a:0, py:"Nán: Zhōumò qù dòngwùyuán de rén duō, wǒ xiān zài wǎngshang bǎ piào mǎi hǎo. Nǚ: Hǎo de, wǒ qù zhǔnbèi háizi de dōngxi.", en:"M: The zoo is busy at weekends; I'll buy the tickets online first. W: OK, I'll get the kids' things ready.", note:"先 tells you his next step. 准备东西 is what she does: check who the question asks about."}
+ ]},
+{id:"B6", mod:"B", cn:"越来越 · 越…越", title:"More and more",
+ formula:"越来越 + adj · 越 V 越 adj",
+ why:"A change over time. Questions ask whether something is getting better or worse, more or fewer.",
+ signal:"越 always comes in a pair. No 很 after 越来越.",
+ ex:[["来中国学习的人越来越多了。","Lái Zhōngguó xuéxí de rén yuè lái yuè duō le.","More and more people come to study in China."],
+     ["雨越下越大，我们还是别出去了。","Yǔ yuè xià yuè dà, wǒmen háishi bié chūqu le.","The rain is getting heavier; we'd better not go out."]],
+ dr:[
+  {t:"gap", q:"经过一个月的练习，他的中文说得越来___好了。", o:["越","更","很","最"], a:0, py:"Jīngguò yí ge yuè de liànxí, tā de Zhōngwén shuō de yuè lái yuè hǎo le.", en:"After a month of practice, his spoken Chinese keeps getting better.", note:"越来越 is one fixed piece."},
+  {t:"order", tiles:["雨","越下","越大","了"], ans:["雨越下越大了"], end:"。", py:"Yǔ yuè xià yuè dà le.", en:"The rain is getting heavier and heavier.", note:"越 + verb + 越 + adjective."},
+  {t:"mean", q:"这家饭馆的菜越来越贵，服务员也越来越不热情，我以后不来了。", ask:"说话人觉得那家饭馆：", o:["越来越好","没有以前好了","客人越来越多"], a:1, py:"Zhè jiā fànguǎn de cài yuè lái yuè guì, fúwùyuán yě yuè lái yuè bú rèqíng, wǒ yǐhòu bù lái le.", en:"The food here keeps getting pricier and the waiters keep getting less friendly; I won't come again.", note:"贵 + 不热情 + 不来了 → worse than before."}
+ ]},
+{id:"B7", mod:"B", cn:"除了…以外", title:"Except · besides",
+ formula:"除了 A 以外，都 B (= except A) · 除了 A 以外，还 B (= A and also B)",
+ why:"The second half decides the meaning: 都 excludes A, 还/也 adds to A. A favourite reading question.",
+ signal:"Look for 都 or 还 after the comma before you decide.",
+ ex:[["除了小王以外，大家都来了。","Chúle Xiǎo Wáng yǐwài, dàjiā dōu lái le.","Everyone came except Xiao Wang."],
+     ["除了游泳以外，我还喜欢打篮球。","Chúle yóuyǒng yǐwài, wǒ hái xǐhuan dǎ lánqiú.","Besides swimming, I also like playing basketball."]],
+ dr:[
+  {t:"mean", q:"除了星期一以外，这个图书馆每天都开门，早上九点到晚上八点。", ask:"图书馆哪天不开门？", o:["星期一","星期天","每天都开"], a:0, py:"Chúle xīngqīyī yǐwài, zhège túshūguǎn měi tiān dōu kāimén, zǎoshang jiǔ diǎn dào wǎnshang bā diǎn.", en:"Except on Mondays, this library is open every day from 9 am to 8 pm.", note:"除了 … 都 = Monday is excluded."},
+  {t:"mean", q:"他除了会说中文以外，还会说一点儿日语。", ask:"他会说：", o:["只会说中文","中文和日语","只会说日语"], a:1, py:"Tā chúle huì shuō Zhōngwén yǐwài, hái huì shuō yìdiǎnr Rìyǔ.", en:"Besides Chinese, he can also speak a little Japanese.", note:"除了 … 还 = in addition."},
+  {t:"gap", q:"除了牛奶以外，你___想喝什么？我去超市买。", o:["还","都","就","才"], a:0, py:"Chúle niúnǎi yǐwài, nǐ hái xiǎng hē shénme? Wǒ qù chāoshì mǎi.", en:"Besides milk, what else would you like to drink? I'm going to the supermarket.", note:"Adding to milk → 还."}
+ ]},
+{id:"B8", mod:"B", cn:"只要…就 · 只有…才", title:"As long as · only if",
+ formula:"只要 A，就 B · 只有 A，才 B",
+ why:"只要 is a low bar (A is enough). 只有 is a strict condition (nothing else works). Real Part 3 texts use both.",
+ signal:"只要 pairs with 就, 只有 with 才. Mixing them is the gap-fill trap.",
+ ex:[["只要每天练习，你的中文就会越来越好。","Zhǐyào měi tiān liànxí, nǐ de Zhōngwén jiù huì yuè lái yuè hǎo.","As long as you practise every day, your Chinese will keep improving."],
+     ["只有对一件事感兴趣，我们才会做得更好。","Zhǐyǒu duì yí jiàn shì gǎn xìngqù, wǒmen cái huì zuò de gèng hǎo.","Only when we're interested in something do we do it better."]],
+ dr:[
+  {t:"gap", q:"游泳不难，只要你多练习几次，___一定能学会。", o:["就","才","都","还"], a:0, py:"Yóuyǒng bù nán, zhǐyào nǐ duō liànxí jǐ cì, jiù yídìng néng xué huì.", en:"Swimming isn't hard; as long as you practise a few times, you'll definitely learn.", note:"只要 … 就."},
+  {t:"gap", q:"爸爸工作很忙，只有周末___能在家吃饭。", o:["才","就","也","还"], a:0, py:"Bàba gōngzuò hěn máng, zhǐyǒu zhōumò cái néng zài jiā chī fàn.", en:"Dad is very busy; he can only eat at home at weekends.", note:"只有 … 才."},
+  {t:"mean", q:"只有考试成绩到了80分，你才能参加下个月的比赛。", ask:"想参加比赛的人必须：", o:["每天练习","考到80分以上","找老师帮忙"], a:1, py:"Zhǐyǒu kǎoshì chéngjì dào le bāshí fēn, nǐ cái néng cānjiā xià ge yuè de bǐsài.", en:"Only if your exam score reaches 80 can you take part in next month's competition.", note:"只有 … 才 = the one condition."}
+ ]},
+// ───────── C 时间与语气
+{id:"C1", mod:"C", cn:"了", title:"了: done, and a new situation",
+ formula:"V + 了 + O (done) · … 了 (new situation) · 不 V 了 (no longer)",
+ why:"了 at the end often means something changed. 不喝了 = I've stopped drinking, not 'I didn't drink'.",
+ signal:"不…了 / 没…了 → a change. 快…了 / 要…了 → about to (C3).",
+ ex:[["我在超市买了两公斤苹果，你要不要？","Wǒ zài chāoshì mǎi le liǎng gōngjīn píngguǒ, nǐ yào bu yào?","I bought two kilos of apples at the supermarket. Do you want some?"],
+     ["医生让我少喝酒，所以我现在不喝啤酒了。","Yīshēng ràng wǒ shǎo hē jiǔ, suǒyǐ wǒ xiànzài bù hē píjiǔ le.","The doctor told me to drink less, so I don't drink beer any more."]],
+ dr:[
+  {t:"mean", q:"男：天这么热，来杯啤酒吧？|女：不了，我现在不喝酒了，给我一杯水就行。", ask:"关于女的，可以知道什么？", o:["以前喝酒","很喜欢啤酒","想喝第二杯"], a:0, py:"Nán: Tiān zhème rè, lái bēi píjiǔ ba? Nǚ: Bù le, wǒ xiànzài bù hē jiǔ le, gěi wǒ yì bēi shuǐ jiù xíng.", en:"M: It's so hot, how about a beer? W: No thanks, I don't drink any more; a glass of water is fine.", note:"不喝了 = stopped, so she used to drink."},
+  {t:"order", tiles:["他","已经","回家","了"], ans:["他已经回家了"], end:"。", py:"Tā yǐjīng huí jiā le.", en:"He has already gone home.", note:"已经 before the verb, 了 at the end."},
+  {t:"gap", q:"我上个周末在网上买___一条裤子，今天到了，但是颜色不对。", o:["了","过","着","的"], a:0, py:"Wǒ shàng ge zhōumò zài wǎngshang mǎi le yì tiáo kùzi, jīntiān dào le, dànshì yánsè bú duì.", en:"I bought a pair of trousers online last weekend; they arrived today, but the colour is wrong.", note:"A finished action with a number + measure word → V了."}
+ ]},
+{id:"C2", mod:"C", cn:"过 · 着", title:"过: have done before · 着: is in that state",
+ formula:"V + 过 (experience) · V + 着 (ongoing state, often while doing something else)",
+ why:"去过 = have been (some time). 开着 = is open (right now). 着 also describes a scene: 门口站着一个人.",
+ signal:"以前/从来没/一次 → 过. Describing what someone is holding, wearing, sitting → 着.",
+ ex:[["我去过三次北京，但是还没去过西安。","Wǒ qù guo sān cì Běijīng, dànshì hái méi qù guo Xī'ān.","I've been to Beijing three times but never to Xi'an."],
+     ["他手里拿着一本书，站在门口等你。","Tā shǒu li ná zhe yì běn shū, zhàn zài ménkǒu děng nǐ.","He's standing at the door with a book in his hand, waiting for you."]],
+ dr:[
+  {t:"gap", q:"你以前去___长城吗？听说春天去最好。", o:["过","着","了","的"], a:0, py:"Nǐ yǐqián qù guo Chángchéng ma? Tīngshuō chūntiān qù zuì hǎo.", en:"Have you been to the Great Wall before? I hear spring is the best time.", note:"以前 + experience → 过."},
+  {t:"gap", q:"你看，那个手里拿___蛋糕的人就是我哥哥。", o:["着","过","了","得"], a:0, py:"Nǐ kàn, nàge shǒu li ná zhe dàngāo de rén jiù shì wǒ gēge.", en:"Look, the person holding a cake is my brother.", note:"Describing what someone is holding right now → 着."},
+  {t:"match", q:"去过，那儿的熊猫特别可爱，菜也很好吃。", o:["你去过四川吗？","你明天去四川吗？","你喜欢做饭吗？"], a:0, py:"Nǐ qù guo Sìchuān ma? — Qù guo, nàr de xióngmāo tèbié kě'ài, cài yě hěn hǎochī.", en:"Have you been to Sichuan? — Yes, the pandas there are really cute and the food is great.", note:"The reply repeats 去过 → the question asked about experience."}
+ ]},
+{id:"C3", mod:"C", cn:"快要…了 · 正在…呢", title:"About to happen · happening now",
+ formula:"快(要)/就要 + V + 了 · 正在 + V (+ 呢)",
+ why:"These change the timing of the whole sentence. 马上就要开始了 = it hasn't started.",
+ signal:"…了 with 快/要 = not yet. 正在/在…呢 = right now.",
+ ex:[["火车快要开了，我们快点儿走吧！","Huǒchē kuàiyào kāi le, wǒmen kuài diǎnr zǒu ba!","The train is about to leave, let's hurry!"],
+     ["他正在洗澡呢，一会儿给你打电话。","Tā zhèngzài xǐzǎo ne, yíhuìr gěi nǐ dǎ diànhuà.","He's in the shower; he'll call you in a moment."]],
+ dr:[
+  {t:"mean", q:"女：快点儿吧，电影马上就要开始了！|男：别着急，电影院就在前面。", ask:"电影：", o:["已经开始了","快开始了","结束了"], a:1, py:"Nǚ: Kuài diǎnr ba, diànyǐng mǎshàng jiù yào kāishǐ le! Nán: Bié zháojí, diànyǐngyuàn jiù zài qiánmiàn.", en:"W: Hurry, the film is about to start! M: Don't worry, the cinema is just ahead.", note:"就要…了 = not yet started."},
+  {t:"mean", q:"男：喂，请问小李在吗？|女：他正在开会呢，你一个小时以后再打吧。", ask:"小李现在在做什么？", o:["开会","打电话","回家"], a:0, py:"Nán: Wéi, qǐngwèn Xiǎo Lǐ zài ma? Nǚ: Tā zhèngzài kāihuì ne, nǐ yí ge xiǎoshí yǐhòu zài dǎ ba.", en:"M: Hello, is Xiao Li there? W: He's in a meeting; call back in an hour.", note:"正在 + 开会 + 呢 = in a meeting now."},
+  {t:"order", tiles:["飞机","马上","就要起飞","了"], ans:["飞机马上就要起飞了"], end:"。", py:"Fēijī mǎshàng jiù yào qǐfēi le.", en:"The plane is about to take off.", note:"马上 + 就要 + verb + 了."}
+ ]},
+{id:"C4", mod:"C", cn:"就 · 才", title:"就 = early/easy · 才 = late/hard",
+ formula:"time + 就 + V (了) · time + 才 + V",
+ why:"The same fact sounds different: 六点就起床了 (early) vs 十点才起床 (late). Listening questions test exactly this attitude.",
+ signal:"才 + a time = later than expected, so 'there's still time' or 'he's late'. 就 = sooner than expected.",
+ ex:[["他今天六点就起床了，七点就到公司了。","Tā jīntiān liù diǎn jiù qǐchuáng le, qī diǎn jiù dào gōngsī le.","He got up at six today and was at the office by seven."],
+     ["我等了他一个小时，他十点才来。","Wǒ děng le tā yí ge xiǎoshí, tā shí diǎn cái lái.","I waited an hour for him; he didn't come until ten."]],
+ dr:[
+  {t:"mean", q:"男：快点儿，我们要迟到了！|女：别着急，会议九点半才开始，现在才八点。", ask:"女的是什么意思？", o:["会议已经开始了","时间还早","她不想去开会"], a:1, py:"Nán: Kuài diǎnr, wǒmen yào chídào le! Nǚ: Bié zháojí, huìyì jiǔ diǎn bàn cái kāishǐ, xiànzài cái bā diǎn.", en:"M: Hurry, we'll be late! W: Relax, the meeting doesn't start until 9:30; it's only eight.", note:"才 + time twice = plenty of time."},
+  {t:"gap", q:"我在门口等了他一个多小时，他___来，还说路上车太多。", o:["才","就","再","又"], a:0, py:"Wǒ zài ménkǒu děng le tā yí ge duō xiǎoshí, tā cái lái, hái shuō lù shang chē tài duō.", en:"I waited at the door for over an hour before he finally came, saying the traffic was bad.", note:"Waited a long time → late → 才."},
+  {t:"gap", q:"这道题很简单，我五分钟___做完了。", o:["就","才","还","再"], a:0, py:"Zhè dào tí hěn jiǎndān, wǒ wǔ fēnzhōng jiù zuò wán le.", en:"This question was easy; I finished it in five minutes.", note:"Quick and easy → 就 … 了."}
+ ]},
+{id:"C5", mod:"C", cn:"还 · 又 · 再", title:"还 still · 又 again (done) · 再 again (later)",
+ formula:"还 + V/没 · 又 + V + 了 (repeated, past) · 再 + V (repeat in the future)",
+ why:"又 looks back, 再 looks forward. 还差一点儿 = not quite finished, a classic listening answer.",
+ signal:"了 in the sentence and it already happened → 又. A plan or a request → 再.",
+ ex:[["你怎么又迟到了？这已经是这个星期第三次了。","Nǐ zěnme yòu chídào le? Zhè yǐjīng shì zhège xīngqī dì-sān cì le.","Why are you late again? That's the third time this week."],
+     ["今天太晚了，我们明天再说吧。","Jīntiān tài wǎn le, wǒmen míngtiān zài shuō ba.","It's too late today; let's talk about it tomorrow."]],
+ dr:[
+  {t:"gap", q:"那个电影太好看了，我昨天看了一次，今天___去看了一次。", o:["又","再","还","才"], a:0, py:"Nàge diànyǐng tài hǎokàn le, wǒ zuótiān kàn le yí cì, jīntiān yòu qù kàn le yí cì.", en:"That film was so good; I watched it yesterday and went again today.", note:"Already repeated (了) → 又."},
+  {t:"gap", q:"经理现在不在，您明天上午___来吧，他一般九点到公司。", o:["再","又","还","刚"], a:0, py:"Jīnglǐ xiànzài bú zài, nín míngtiān shàngwǔ zài lái ba, tā yìbān jiǔ diǎn dào gōngsī.", en:"The manager isn't in; come again tomorrow morning; he usually gets in at nine.", note:"A future repeat → 再."},
+  {t:"mean", q:"女：你写的东西经理要用，写完了吗？|男：还差两个问题，晚上一定能写完。", ask:"男的是什么意思？", o:["已经写完了","还没写完","不会写"], a:1, py:"Nǚ: Nǐ xiě de dōngxi jīnglǐ yào yòng, xiě wán le ma? Nán: Hái chà liǎng ge wèntí, wǎnshang yídìng néng xiě wán.", en:"W: The manager needs what you're writing; is it done? M: Two questions left; it'll be done tonight.", note:"还差 = still short of → not finished."}
+ ]},
+{id:"C6", mod:"C", cn:"是…的", title:"是…的: when, where, how it happened",
+ formula:"S + 是 + time/place/way + V + 的",
+ why:"Used for past events when the focus is on a detail: how you came, where you met. Part 1 replies often repeat the 是…的 frame of the question.",
+ signal:"是 + detail + verb + 的. In ordering, 的 goes last (or before the object).",
+ ex:[["我是坐火车来的，比飞机方便多了。","Wǒ shì zuò huǒchē lái de, bǐ fēijī fāngbiàn duō le.","I came by train; it's much more convenient than flying."],
+     ["你们是在哪儿认识的？","Nǐmen shì zài nǎr rènshi de?","Where did you two meet?"]],
+ dr:[
+  {t:"order", tiles:["我","是","坐飞机","来的"], ans:["我是坐飞机来的"], end:"。", py:"Wǒ shì zuò fēijī lái de.", en:"I came by plane.", note:"是 + way + verb + 的."},
+  {t:"match", q:"去年九月来的，已经一年多了，现在越来越习惯了。", o:["你是什么时候来中国的？","你来中国做什么？","你喜欢北京的冬天吗？"], a:0, py:"Nǐ shì shénme shíhou lái Zhōngguó de? — Qùnián jiǔ yuè lái de.", en:"When did you come to China? — Last September; it's been over a year and I'm getting used to it.", note:"The reply gives a time + 来的 → the question was 是什么时候…的."},
+  {t:"gap", q:"这件衣服真漂亮，是在哪儿买___？", o:["的","了","过","着"], a:0, py:"Zhè jiàn yīfu zhēn piàoliang, shì zài nǎr mǎi de?", en:"This dress is lovely. Where did you buy it?", note:"是 + 在哪儿 + 买 + 的."}
+ ]},
+{id:"C7", mod:"C", cn:"言外之意", title:"Hidden meaning: 还是…吧, 不是…吗, 就是",
+ formula:"还是 V 吧 (suggestion) · 不是…吗？(I thought…) · …，就是… (only problem)",
+ why:"These turn a plain sentence into an opinion. The listening question then asks 是什么意思 or 可以知道什么.",
+ signal:"就是 after a compliment = 'but'. 不是…吗 = the speaker expected the opposite.",
+ ex:[["这件衣服很好看，就是有点儿贵。","Zhè jiàn yīfu hěn hǎokàn, jiùshì yǒudiǎnr guì.","This is a nice dress; it's just a bit expensive."],
+     ["你不是去上海了吗？怎么还在这儿？","Nǐ bú shì qù Shànghǎi le ma? Zěnme hái zài zhèr?","Didn't you go to Shanghai? Why are you still here?"]],
+ dr:[
+  {t:"mean", q:"女：这双鞋颜色很好看，就是穿着有点儿小，有大一点儿的吗？", ask:"女的觉得那双鞋怎么样？", o:["太贵了","有点儿小","颜色不好"], a:1, py:"Nǚ: Zhè shuāng xié yánsè hěn hǎokàn, jiùshì chuān zhe yǒudiǎnr xiǎo, yǒu dà yìdiǎnr de ma?", en:"W: These shoes are a lovely colour, they're just a bit small. Do you have a bigger size?", note:"就是 introduces the problem."},
+  {t:"mean", q:"男：你不是去上海了吗？怎么还在公司？|女：我的飞机票是下个星期的。", ask:"男的以为女的：", o:["在上海","生病了","在家休息"], a:0, py:"Nán: Nǐ bú shì qù Shànghǎi le ma? Zěnme hái zài gōngsī? Nǚ: Wǒ de fēijī piào shì xià ge xīngqī de.", en:"M: Didn't you go to Shanghai? Why are you still at the office? W: My plane ticket is for next week.", note:"不是…吗 = what he thought."},
+  {t:"match", q:"还是坐地铁吧，这个时候路上车太多，开车更慢。", o:["我们开车去机场吧？","你家离机场远吗？","你几点的飞机？"], a:0, py:"Wǒmen kāichē qù jīchǎng ba? — Háishi zuò dìtiě ba, zhège shíhou lù shang chē tài duō.", en:"Shall we drive to the airport? — Let's take the underground instead; the roads are packed at this time.", note:"还是…吧 = a counter-suggestion, so the other person suggested something else (driving)."}
+ ]},
+// ───────── D 填空词性
+{id:"D1", mod:"D", cn:"量词", title:"Measure words: what comes after a number or 这/那",
+ formula:"number/这/那/几 + measure word + noun",
+ why:"After 一/两/这/那 the blank is a measure word. The noun after it decides which one.",
+ signal:"双 = pairs (鞋, 筷子) · 段 = stretch of time or text · 位 = polite for people · 把 = things with a handle, chairs · 条 = long things, trousers · 张 = flat things.",
+ ex:[["上次我给爸爸买了一双皮鞋，他高兴了很久。","Shàng cì wǒ gěi bàba mǎi le yì shuāng píxié, tā gāoxìng le hěn jiǔ.","Last time I bought Dad a pair of leather shoes; he was happy for ages."],
+     ["经过这段时间的学习，他的水平提高了不少。","Jīngguò zhè duàn shíjiān de xuéxí, tā de shuǐpíng tígāo le bù shǎo.","After this period of study, his level has improved a lot."]],
+ dr:[
+  {t:"gap", q:"今天是妈妈的生日，我给她买了一___新皮鞋。", o:["双","件","张","条"], a:0, py:"Jīntiān shì māma de shēngrì, wǒ gěi tā mǎi le yì shuāng xīn píxié.", en:"It's Mum's birthday today; I bought her a new pair of leather shoes.", note:"Shoes come in pairs → 双."},
+  {t:"gap", q:"坐在你旁边的那___老人是我们学校以前的校长。", o:["位","张","本","把"], a:0, py:"Zuò zài nǐ pángbiān de nà wèi lǎorén shì wǒmen xuéxiào yǐqián de xiàozhǎng.", en:"The elderly man sitting next to you is our school's former head.", note:"Polite measure word for a person → 位 (not 为!)."},
+  {t:"gap", q:"这___椅子坐着很舒服，就是有点儿高。", o:["把","双","段","位"], a:0, py:"Zhè bǎ yǐzi zuò zhe hěn shūfu, jiùshì yǒudiǎnr gāo.", en:"This chair is comfortable to sit on; it's just a bit high.", note:"Chairs → 把."}
+ ]},
+{id:"D2", mod:"D", cn:"看位置选词", title:"Read the slot: adjective, adverb, verb or noun?",
+ formula:"很 + adj/feeling verb · ＿ + verb → adverb · 的/在…＿ → noun · 能/想/要 + verb",
+ why:"Real Part 2 always has six options of different word classes. Decide the class from the neighbours first, then check the meaning. That cuts six options to one or two.",
+ signal:"很 ___ → 有名, 了解, 关心. ___ 就来 → 马上. 在黄河 ___ → 附近. 一直 ___ → a verb or adjective.",
+ ex:[["听朋友说，这家面包店在北京很有名。","Tīng péngyou shuō, zhè jiā miànbāodiàn zài Běijīng hěn yǒumíng.","A friend says this bakery is famous in Beijing."],
+     ["我们做同事有七八年了，我很了解他。","Wǒmen zuò tóngshì yǒu qī-bā nián le, wǒ hěn liǎojiě tā.","We've been colleagues for seven or eight years; I know him well."]],
+ dr:[
+  {t:"gap", q:"喂，你好，我们房间的空调坏了，你们能找人过来看看吗？——好的，先生，我们___就到。", o:["马上","附近","了解","有名"], a:0, py:"Wéi, nǐ hǎo, wǒmen fángjiān de kōngtiáo huài le, nǐmen néng zhǎo rén guòlai kànkan ma? — Hǎo de, xiānsheng, wǒmen mǎshàng jiù dào.", en:"Hello, the air conditioning in our room is broken; can you send someone? — Certainly, sir, we'll be right there.", note:"___ + 就 + verb → an adverb of time: 马上."},
+  {t:"gap", q:"爷爷家就住在黄河___，他小时候经常在河边玩儿。", o:["附近","马上","了解","比较"], a:0, py:"Yéye jiā jiù zhù zài Huáng Hé fùjìn, tā xiǎo shíhou jīngcháng zài hé biān wánr.", en:"Grandpa lives near the Yellow River; as a child he often played by the river.", note:"在 + place + ___ → a place word: 附近."},
+  {t:"gap", q:"现在才五点，天怎么就黑了？——冬天白天的时间___短。", o:["比较","附近","马上","了解"], a:0, py:"Xiànzài cái wǔ diǎn, tiān zěnme jiù hēi le? — Dōngtiān báitiān de shíjiān bǐjiào duǎn.", en:"It's only five; why is it dark already? — In winter the days are fairly short.", note:"___ + adjective (短) → a degree adverb: 比较."}
+ ]}
+];
+
+</script>
+<script>
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const KIND={order:"排序 · 书写第一部分",gap:"填空 · 阅读第二部分",match:"配对 · 阅读第一部分 (reply given → find the first sentence)",mean:"什么意思 · 听力 / 阅读第三部分"};
+const KEYS="ABCDEF";
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+const fmt=s=>{s=Math.round(s);return Math.floor(s/60)+":"+String(s%60).padStart(2,"0");};
+
+// ---------- storage: db (shared with Claude) + local fallback
+let db=null; const LOG=[];
+const local={get(){try{return JSON.parse(localStorage.getItem("hsk3gram")||"[]");}catch(e){return [];}},
+  set(v){try{localStorage.setItem("hsk3gram",JSON.stringify(v.slice(-2000)));}catch(e){}}};
+local.get().forEach(r=>LOG.push(r));
+(async()=>{try{db=window.claude&&await window.claude.use("db");}catch(e){db=null;}
+  if(db){try{const snap=await db.collection("grammar").get();const seen=new Set(LOG.map(r=>r.at+r.drill));
+    snap.docs.forEach(d=>{const r=d.data();if(r&&!seen.has(r.at+r.drill)){r.fromDb=true;LOG.push(r);}});render();}catch(e){}}})();
+function log(rec){LOG.push(rec);local.set(LOG.filter(r=>!r.fromDb));
+  if(db){try{db.collection("grammar").add(rec);}catch(e){}}}
+function stats(pid){const rs=LOG.filter(r=>r.point===pid&&r.first);const ids=new Set();const okIds=new Set();
+  // last result per drill counts
+  const last={};rs.forEach(r=>{last[r.drill]=r.ok;});
+  const n=P.find(p=>p.id===pid).dr.length;const ok=Object.values(last).filter(Boolean).length;
+  return {n,ok,tried:Object.keys(last).length};}
+
+// ---------- navigation
+let view={tab:"A",point:null,mode:null};
+function tabs(){const t=[{id:"run",l:"速览 · Run-through"},...MODS.map(m=>({id:m.id,l:m.id+" · "+m.cn})),{id:"log",l:"记录 · Log"},{id:"how",l:"方法 · How"}];
+  $("#tabs").innerHTML=t.map(x=>`<button class="tab" role="tab" aria-selected="${view.tab===x.id&&!view.point}" data-t="${x.id}">${esc(x.l)}</button>`).join("");
+  $("#tabs").querySelectorAll(".tab").forEach(b=>b.onclick=()=>{stopClock();view={tab:b.dataset.t,point:null,mode:null};render();scrollTo(0,0);});}
+function render(){tabs();
+  if(view.mode)return; // drill/test screens manage themselves
+  if(view.tab==="run"){if(!document.getElementById("rscore"))renderRun();return;}
+  if(view.tab==="log")return renderLog();
+  if(view.tab==="how")return renderHow();
+  if(view.point)return renderPoint();
+  renderModule();}
+
+function renderModule(){const m=MODS.find(x=>x.id===view.tab);const pts=P.filter(p=>p.mod===m.id);
+  $("#main").innerHTML=`<div class="card modhead"><span class="exam">${esc(m.exam)}</span><h2>${m.id} · ${esc(m.cn)} · ${esc(m.en)}</h2><p>${esc(m.why)}</p>
+   <div class="row"><button class="btn" id="mix">混合测试 · Mixed test (10 items, timed)</button></div></div>
+   <div class="points">${pts.map(p=>{const s=stats(p.id);return `<button class="pt" data-p="${p.id}"><span class="id">${p.id}</span><span class="cn">${esc(p.cn)}</span><span class="en">${esc(p.title)}</span>
+   <span class="bar"><i style="width:${100*s.ok/s.n}%"></i></span><span class="st">${s.ok}/${s.n} right${s.tried?"":" · new"}</span></button>`;}).join("")}</div>`;
+  $("#main").querySelectorAll(".pt").forEach(b=>b.onclick=()=>{view.point=b.dataset.p;render();scrollTo(0,0);});
+  $("#mix").onclick=()=>startTest(m.id);}
+
+function exHTML(e){return `<div class="ex"><span class="hz">${esc(e[0])}</span><span class="py">${esc(e[1])}</span><span class="en2">${esc(e[2])}</span></div>`;}
+function renderPoint(){const p=P.find(x=>x.id===view.point);const s=stats(p.id);
+  $("#main").innerHTML=`<div class="card">
+   <div class="row"><button class="link" id="back">← ${p.mod} · ${esc(MODS.find(m=>m.id===p.mod).cn)}</button></div>
+   <span class="exam">${p.id} · ${s.ok}/${s.n} right</span>
+   <h2 style="font-family:var(--hanzi);font-size:26px;margin:0">${esc(p.cn)} · ${esc(p.title)}</h2>
+   <div class="formula">${esc(p.formula)}</div>
+   <p class="lbl">Why it matters</p><p style="margin:0">${esc(p.why)}</p>
+   <p class="lbl">Signal in the exam</p><p style="margin:0">${esc(p.signal)}</p>
+   <p class="lbl">Examples</p>${p.ex.map(exHTML).join("")}
+   <div class="row"><button class="btn" id="go">练习 · ${p.dr.length} drills</button></div></div>`;
+  $("#back").onclick=()=>{view.point=null;render();};
+  $("#go").onclick=()=>startDrills(p.id);}
+
+// ---------- drill engine
+let run=null,clockT=null;
+function stopClock(){if(clockT){clearInterval(clockT);clockT=null;}}
+function startDrills(pid){const p=P.find(x=>x.id===pid);
+  run={kind:"point",pid,items:p.dr.map((d,i)=>({p,d,i})),k:0,score:0,t0:0,start:Date.now(),answers:[]};view.mode="run";drill();}
+function startTest(mid){const pool=[];P.filter(p=>p.mod===mid).forEach(p=>p.dr.forEach((d,i)=>pool.push({p,d,i})));
+  run={kind:"test",mid,items:shuffle(pool).slice(0,10),k:0,score:0,start:0,answers:[]};view.mode="run";
+  $("#main").innerHTML=`<div class="card"><span class="exam">${mid} · mixed test</span><h2 style="font-family:var(--hanzi);margin:0">混合测试</h2>
+   <p style="margin:0">10 random drills from this module, no explanations until the end. Read at exam pace: about 45 seconds per item.</p>
+   <div class="row"><button class="btn" id="st">开始 · Start</button><button class="btn ghost" id="cx">Cancel</button></div></div>`;
+  $("#st").onclick=()=>{run.start=Date.now();stopClock();clockT=setInterval(()=>{const c=$("#clk");if(c)c.textContent=fmt((Date.now()-run.start)/1000);},500);drill();};
+  $("#cx").onclick=()=>{view.mode=null;render();};}
+
+function drill(){const it=run.items[run.k];if(!it)return finish();const {p,d}=it;run.t0=Date.now();run.done=false;
+  const head=`<div class="top"><span class="kind">${esc(KIND[d.t])}</span><span class="row"><span class="exam">${run.k+1}/${run.items.length}${run.kind==="point"?" · "+p.id:""}</span>${run.kind==="test"?'<span class="clock" id="clk">'+fmt((Date.now()-run.start)/1000)+'</span>':""}</span></div>`;
+  let body="";
+  if(d.t==="order"){it.order=it.order||shuffle(d.tiles.map((t,i)=>i));
+    body=`<p class="lbl">完成句子 · tap the pieces in order</p><div class="built" id="built"></div><div class="tiles" id="tiles">${it.order.map(i=>`<button class="tile" data-i="${i}">${esc(d.tiles[i])}</button>`).join("")}</div>
+     <div class="row"><button class="btn" id="chk" disabled>Check</button><button class="btn ghost" id="clr">Clear</button></div>`;}
+  else{if(!it.perm)it.perm=d.t==="gap"?shuffle(d.o.map((_,i)=>i)):d.o.map((_,i)=>i);
+    if(d.t==="gap")body=`<p class="q">${esc(d.q).replace("___",'<span class="blank">&nbsp;</span>')}</p>`;
+    if(d.t==="mean")body=`<p class="q">${d.q.split("|").map(l=>`<span class="line">${esc(l)}</span>`).join("")}</p><p class="ask">问：${esc(d.ask)}</p>`;
+    if(d.t==="match")body=`<p class="lbl">这句话是回答或接着哪一句？</p><p class="q">${esc(d.q)}</p>`;
+    body+=`<div class="opts ${d.t==="gap"?"gapopts":""}" id="opts">${it.perm.map((oi,j)=>`<button class="opt" data-o="${oi}"><span class="k">${KEYS[j]}</span><span class="t">${esc(d.o[oi])}</span></button>`).join("")}</div>`;}
+  $("#main").innerHTML=`<div class="card drill">${head}${body}<div id="fb"></div><div class="row" id="nx"></div></div>`;
+  if(d.t==="order"){const seq=[];const upd=()=>{$("#built").innerHTML=seq.map((i,k)=>`<button class="tile" data-k="${k}">${esc(d.tiles[i])}</button>`).join("");
+      $("#tiles").querySelectorAll(".tile").forEach(b=>b.classList.toggle("used",seq.includes(+b.dataset.i)));
+      $("#built").querySelectorAll(".tile").forEach(b=>b.onclick=()=>{if(run.done)return;seq.splice(+b.dataset.k,1);upd();});
+      $("#chk").disabled=seq.length!==d.tiles.length;};
+    $("#tiles").querySelectorAll(".tile").forEach(b=>b.onclick=()=>{if(run.done)return;const i=+b.dataset.i;if(!seq.includes(i)){seq.push(i);upd();}});
+    $("#clr").onclick=()=>{if(run.done)return;seq.length=0;upd();};
+    $("#chk").onclick=()=>{const s=seq.map(i=>d.tiles[i]).join("");answer(d.ans.includes(s),s);};}
+  else $("#opts").querySelectorAll(".opt").forEach(b=>b.onclick=()=>{if(run.done)return;const o=+b.dataset.o;
+    $("#opts").querySelectorAll(".opt").forEach(x=>{if(+x.dataset.o===d.a)x.classList.add("ok");});
+    if(o!==d.a)b.classList.add("no");answer(o===d.a,d.o[o]);});}
+
+function answer(ok,pick){const it=run.items[run.k];const {p,d,i}=it;run.done=true;const ms=Date.now()-run.t0;
+  if(ok)run.score++;const first=!it.retry;
+  run.answers.push({pid:p.id,d,ok,pick,ms});
+  log({point:p.id,drill:p.id+"-"+(i+1),type:d.t,ok,pick,ms,first,mode:run.kind,at:new Date().toISOString()});
+  const full=d.t==="order"?d.ans[0]+d.end:d.t==="gap"?d.q.replace("___",d.o[d.a]):null;
+  if(run.kind==="point"||true){
+    const showNote=run.kind==="point";
+    $("#fb").innerHTML=`<div class="fb ${ok?"ok":"no"}"><b>${ok?"对了":"不对"}${d.t==="order"&&!ok?" · your order: "+esc(pick):""}</b>
+      ${full?`<span class="hz">${esc(full)}</span>`:""}<span class="py">${esc(d.py)}</span><span class="en2">${esc(d.en)}</span>
+      ${showNote?`<span class="note">${esc(d.note)}</span>`:""}</div>`;}
+  $("#nx").innerHTML=`<button class="btn" id="next">${run.k+1<run.items.length?"下一题 · Next":"结果 · Results"}</button>`;
+  $("#next").onclick=()=>{run.k++;drill();scrollTo(0,0);};$("#next").focus();}
+
+function finish(){stopClock();const secs=run.kind==="test"?(Date.now()-run.start)/1000:null;const n=run.items.length;
+  const wrong=run.answers.filter(a=>!a.ok);
+  if(run.kind==="test")log({point:"TEST-"+run.mid,drill:"TEST-"+run.mid,type:"test",ok:run.score===n,score:run.score,n,seconds:Math.round(secs),first:false,mode:"test",
+    wrong:wrong.map(a=>a.pid),at:new Date().toISOString()});
+  const back=run.kind==="point"?run.pid:null;
+  $("#main").innerHTML=`<div class="card"><span class="exam">${run.kind==="test"?run.mid+" · mixed test":run.pid}</span>
+   <div class="big">${run.score}/${n}${secs?" · "+fmt(secs)+" · "+Math.round(secs/n)+" s per item":""}</div>
+   ${wrong.length?`<p class="lbl">To look at again</p><table><tr><th>Point</th><th>Item</th><th>Note</th></tr>${wrong.map(a=>`<tr><td>${a.pid}</td><td class="hzs">${esc(a.d.t==="order"?a.d.ans[0]+a.d.end:a.d.t==="gap"?a.d.q.replace("___",a.d.o[a.d.a]):a.d.q.replace("|"," "))}</td><td>${esc(a.d.note)}</td></tr>`).join("")}</table>`:"<p style='margin:0'>All right. Next: a mixed test in another module.</p>"}
+   <div class="row">${back?'<button class="btn" id="again">Again</button>':""}<button class="btn ghost" id="home">Back to module</button></div></div>`;
+  if(back)$("#again").onclick=()=>startDrills(back);
+  $("#home").onclick=()=>{const t=run.kind==="test"?run.mid:P.find(p=>p.id===run.pid).mod;view={tab:t,point:back,mode:null};render();};}
+
+function renderLog(){const rs=LOG.filter(r=>r.type!=="test");const tests=LOG.filter(r=>r.type==="test").slice().reverse();
+  const byPt={};rs.forEach(r=>{(byPt[r.point]=byPt[r.point]||{n:0,ok:0,ms:0});byPt[r.point].n++;if(r.ok)byPt[r.point].ok++;byPt[r.point].ms+=r.ms||0;});
+  $("#main").innerHTML=`<div class="card"><h2 style="font-family:var(--hanzi);margin:0">记录 · Log</h2>
+   <p style="margin:0;color:var(--muted)">Every answer is saved${db?" to the shared log Claude reads, so we can analyse it together":" in this browser only"}.</p>
+   <p class="lbl">Mixed tests</p>${tests.length?`<table><tr><th>Date</th><th>Module</th><th>Score</th><th>Time</th><th>Missed</th></tr>${tests.map(t=>`<tr><td>${t.at.slice(0,10)}</td><td>${t.point.slice(5)}</td><td>${t.score}/${t.n}</td><td>${fmt(t.seconds)}</td><td>${(t.wrong||[]).join(", ")}</td></tr>`).join("")}</table>`:"<p style='margin:0'>None yet.</p>"}
+   <p class="lbl">By grammar point (all attempts)</p>${Object.keys(byPt).length?`<table><tr><th>Point</th><th>Right</th><th>Avg time</th></tr>${P.filter(p=>byPt[p.id]).map(p=>{const b=byPt[p.id];return `<tr><td>${p.id} <span class="hzs">${esc(p.cn)}</span></td><td>${b.ok}/${b.n}</td><td>${Math.round(b.ms/b.n/1000)} s</td></tr>`;}).join("")}</table>`:"<p style='margin:0'>No answers yet.</p>"}</div>`;}
+
+// ---------- run-through: one simple rule, one sentence, one exercise per point
+const SIMPLE={
+A1:["把 puts the thing before the verb to say what you did to it. The verb always needs something after it: 放在…, 写完, 洗干净.",1],
+A2:["被 = “was done by”. The thing comes first, the doer after 被, then the verb plus a result.",1],
+A3:["When and where come before the verb, never at the end. To say what is somewhere: place + 有 + thing.",0],
+A4:["Small adverbs (都, 也, 还, 又, 已经) sit directly before the verb.",0],
+A5:["All three are “de”. Verb + 得 + how · how + 地 + verb · description + 的 + noun.",0],
+A6:["A second part after the verb shows the result: 看见 saw, 听懂 understood, 写完 finished, 拿出来 took out.",1],
+A7:["得 or 不 between verb and result means can or can't: 听得懂, 听不懂, 找不到.",1],
+A8:["A 比 B + adjective (+ 一点儿 / 多了). Never 很 in a 比 sentence. A 没有 B + adjective = A is less.",0],
+B1:["虽然…但是 = although…, but…. The important part comes after 但是.",1],
+B2:["因为 gives the cause, 所以 the result. A sentence that starts with 所以 continues a story.",1],
+B3:["如果…就 = if…, then…. 就 comes after the subject of the second half.",0],
+B4:["不但…而且 = not only…, but also…. Both halves point the same way.",0],
+B5:["一边…一边 = two things at the same time. 先…然后 = first…, then….",1],
+B6:["越来越 + adjective = more and more. 越 A 越 B = the more A, the more B.",0],
+B7:["除了…都 = all except. 除了…还 / 也 = and also.",2],
+B8:["只要…就 = as long as (easy condition). 只有…才 = only if (strict condition).",1],
+C1:["了 after the verb = done. 了 at the end = something changed. 不…了 = not any more.",2],
+C2:["过 = have done it before. 着 = is in that state right now (拿着, 开着).",0],
+C3:["快要 / 就要…了 = about to happen (not yet!). 正在…呢 = happening now.",2],
+C4:["Time + 就 = early or easy. Time + 才 = late or hard.",1],
+C5:["还 = still. 又 = again, already happened. 再 = again, in the future.",0],
+C6:["是…的 tells when, where or how something in the past happened.",2],
+C7:["还是…吧 = let's rather…. 不是…吗？ = I thought…. 就是 after praise = the only problem is….",0],
+D1:["After a number or 这 / 那 comes a measure word: 双 pairs, 位 people (polite), 把 chairs, 条 trousers, 张 paper.",0],
+D2:["Look at the neighbours first: 很 + adjective, adverb + verb, place + 附近.",0]
+};
+function solvedText(d){return d.t==="order"?d.ans[0]+d.end:d.t==="gap"?d.q.replace("___",d.o[d.a]):d.q.replace("|"," ");}
+function renderRun(){
+  const html=MODS.map(m=>`<h2 style="font-family:var(--hanzi);font-size:22px;margin:8px 0 0">${m.id} · ${esc(m.cn)} · ${esc(m.en)}</h2>`+
+   P.filter(p=>p.mod===m.id).map(p=>{const [rule]=SIMPLE[p.id];const e=p.ex[0];
+    return `<div class="card" id="r-${p.id}"><span class="exam">${p.id}</span>
+     <h3 style="font-family:var(--hanzi);font-size:20px;margin:0">${esc(p.cn)} · ${esc(p.title)}</h3>
+     <p style="margin:0">${esc(rule)}</p>
+     <div class="ex"><span class="hz">${esc(e[0])}</span><span class="py">${esc(e[1])}</span><span class="en2">${esc(e[2])}</span></div>
+     <p class="lbl">练习</p><div class="rx" data-p="${p.id}"></div></div>`;}).join("")).join("");
+  $("#main").innerHTML=`<div class="card"><h2 style="font-family:var(--hanzi);margin:0">速览 · Run-through</h2>
+   <p style="margin:0">All 25 points on one page: the rule in one line, one sentence, one exercise. About 20 minutes. Points you miss: open them in their module for the full drills.</p>
+   <p class="big" id="rscore" style="margin:0"></p></div>${html}`;
+  const res={};
+  const upd=()=>{const n=Object.keys(res).length,ok=Object.values(res).filter(Boolean).length;
+    $("#rscore").textContent=n?`${ok}/${n} right · ${25-n} to go`:"";};
+  document.querySelectorAll(".rx").forEach(box=>{const p=P.find(x=>x.id===box.dataset.p);const di=SIMPLE[p.id][1];const d=p.dr[di];const t0=Date.now();
+    const done=(ok,pick)=>{res[p.id]=ok;upd();
+      log({point:p.id,drill:p.id+"-"+(di+1),type:d.t,ok,pick,ms:Date.now()-t0,first:true,mode:"run",at:new Date().toISOString()});
+      box.insertAdjacentHTML("beforeend",`<div class="fb ${ok?"ok":"no"}"><b>${ok?"对了":"不对"}</b><span class="hz">${esc(solvedText(d))}</span><span class="py">${esc(d.py)}</span><span class="en2">${esc(d.en)}</span><span class="note">${esc(d.note)}</span></div>`);};
+    if(d.t==="order"){const order=shuffle(d.tiles.map((_,i)=>i));const seq=[];let fin=false;
+      box.innerHTML=`<div class="built"></div><div class="tiles">${order.map(i=>`<button class="tile" data-i="${i}">${esc(d.tiles[i])}</button>`).join("")}</div><div class="row"><button class="btn ck" disabled>Check</button><button class="btn ghost cl">Clear</button></div>`;
+      const built=box.querySelector(".built"),ck=box.querySelector(".ck");
+      const draw=()=>{built.innerHTML=seq.map((i,k)=>`<button class="tile" data-k="${k}">${esc(d.tiles[i])}</button>`).join("");
+        box.querySelectorAll(".tiles .tile").forEach(b=>b.classList.toggle("used",seq.includes(+b.dataset.i)));
+        built.querySelectorAll(".tile").forEach(b=>b.onclick=()=>{if(fin)return;seq.splice(+b.dataset.k,1);draw();});
+        ck.disabled=fin||seq.length!==d.tiles.length;};
+      box.querySelectorAll(".tiles .tile").forEach(b=>b.onclick=()=>{if(fin)return;const i=+b.dataset.i;if(!seq.includes(i)){seq.push(i);draw();}});
+      box.querySelector(".cl").onclick=()=>{if(fin)return;seq.length=0;draw();};
+      ck.onclick=()=>{fin=true;ck.disabled=true;const s=seq.map(i=>d.tiles[i]).join("");done(d.ans.includes(s),s);};
+    }else{const perm=d.t==="gap"?shuffle(d.o.map((_,i)=>i)):d.o.map((_,i)=>i);let fin=false;
+      let q=d.t==="gap"?`<p class="q">${esc(d.q).replace("___",'<span class="blank">&nbsp;</span>')}</p>`:
+        d.t==="mean"?`<p class="q">${d.q.split("|").map(l=>`<span class="line">${esc(l)}</span>`).join("")}</p><p class="ask">问：${esc(d.ask)}</p>`:
+        `<p class="lbl">这句话是回答或接着哪一句？</p><p class="q">${esc(d.q)}</p>`;
+      box.innerHTML=q+`<div class="opts ${d.t==="gap"?"gapopts":""}">${perm.map((oi,j)=>`<button class="opt" data-o="${oi}"><span class="k">${KEYS[j]}</span><span class="t">${esc(d.o[oi])}</span></button>`).join("")}</div>`;
+      box.querySelectorAll(".opt").forEach(b=>b.onclick=()=>{if(fin)return;fin=true;const o=+b.dataset.o;
+        box.querySelectorAll(".opt").forEach(x=>{if(+x.dataset.o===d.a)x.classList.add("ok");});if(o!==d.a)b.classList.add("no");done(o===d.a,d.o[o]);});}
+  });}
+
+function renderHow(){$("#main").innerHTML=`<div class="card"><h2 style="font-family:var(--hanzi);margin:0">方法 · How to use this</h2>
+  <ol class="howto">
+   <li><b>One point a session.</b> Read the formula and the signal, say both examples aloud, then do its 3 drills.</li>
+   <li><b>Name it before you answer.</b> For every item, say which grammar point you see (把, 才, 就是…). That is the step that transfers to the real exam.</li>
+   <li><b>Mixed test per module</b> once its points are green. It's timed and shows notes only at the end, like the exam.</li>
+   <li><b>配对 items are reversed on purpose.</b> In the real reading part 1, about 60% of the sentences you match are replies or continuations, so you have to work back to what came first.</li>
+   <li><b>Use it in lessons.</b> Pick a point that went red and ask your tutor to use it with you in conversation.</li>
+  </ol>
+  <p class="lbl">Level check</p><p style="margin:0">Drill sentences average about 19 characters and 1.7 grammar markers, measured against real HSK 3 papers (reading part 1 about 14 characters, part 2 about 22). Vocabulary was checked against the HSK 1–3 word lists.</p></div>`;}
+render();
+</script>
+</body>
+</html>
+
+</body></html>

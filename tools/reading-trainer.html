@@ -1,0 +1,782 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>HSK 3 Reading Trainer</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@500;700;900&family=Noto+Sans+SC:wght@400;500;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+/* Layout: an exam answer card. Sticky timer bar, the option sheet on top, numbered questions with bubble answers below. */
+:root{
+  --paper:#F3F4EF; --sheet:#FFFFFF; --ink:#1B2430; --muted:#5E6670; --rule:#D9DCD3;
+  --seal:#B4232F; --seal-soft:#F6E3E4; --jade:#2C7A55; --jade-soft:#E1F0E8; --amber:#B8661E; --amber-soft:#F7EADB;
+  --hanzi:'Noto Serif SC','Songti SC','SimSun',serif;
+  --ui:'Noto Sans SC','PingFang SC','Microsoft YaHei',system-ui,sans-serif;
+  --mono:'IBM Plex Mono',ui-monospace,'SF Mono',Menlo,monospace;
+}
+/* Always black on white: easier to read Hanzi. */
+:root{color-scheme:light}
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--ui);font-size:15px;line-height:1.55;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 48px}
+.wrap{max-width:860px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+header.top{display:flex;flex-direction:column;gap:6px;padding-top:28px}
+.eyebrow{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+h1{font-family:var(--hanzi);font-weight:900;font-size:clamp(28px,6vw,40px);line-height:1.15;margin:0;text-wrap:balance}
+.lede{color:var(--muted);max-width:62ch;margin:0}
+.tabs{display:flex;gap:6px;flex-wrap:wrap}
+.tab{font:inherit;font-weight:500;border:1px solid var(--rule);background:var(--sheet);color:var(--ink);padding:8px 14px;border-radius:999px;cursor:pointer}
+.tab[aria-selected="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.tab:focus-visible,.btn:focus-visible,.bubble:focus-visible,.chip:focus-visible,.peek:focus-visible{outline:2px solid var(--seal);outline-offset:2px}
+.sets{display:flex;gap:8px;flex-wrap:wrap}
+.chip{font:inherit;border:1px solid var(--rule);background:var(--sheet);color:var(--ink);border-radius:10px;padding:6px 12px;cursor:pointer;display:flex;flex-direction:column;align-items:flex-start;min-width:84px}
+.chip b{font-size:14px}
+.chip span{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.chip[aria-pressed="true"]{border-color:var(--seal);box-shadow:inset 0 0 0 1px var(--seal)}
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--paper);padding-block:10px;border-bottom:1px solid var(--rule);display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--paper)}
+.clock{font-family:var(--mono);font-weight:600;font-size:28px;font-variant-numeric:tabular-nums;min-width:4.2ch}
+.pace{font-size:13px;color:var(--muted)}
+.pace .tag{display:inline-block;padding:1px 8px;border-radius:999px;font-weight:600;margin-left:4px}
+.tag.good{background:var(--jade-soft);color:var(--jade)} .tag.mid{background:var(--amber-soft);color:var(--amber)} .tag.slow{background:var(--seal-soft);color:var(--seal)}
+.spacer{flex:1}
+.btn{font:inherit;font-weight:600;border:1px solid var(--ink);background:var(--ink);color:var(--paper);padding:8px 16px;border-radius:8px;cursor:pointer}
+.btn.ghost{background:transparent;color:var(--ink);border-color:var(--rule)}
+.btn[disabled]{opacity:.45;cursor:default}
+.sheet{background:var(--sheet);border:1px solid var(--rule);border-radius:12px;padding:18px;display:flex;flex-direction:column;gap:12px}
+.sheet h2{margin:0;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,360px),1fr));gap:8px 18px}
+.opts.words{grid-template-columns:repeat(auto-fit,minmax(110px,1fr))}
+.opt{display:flex;gap:10px;align-items:baseline;padding:6px 8px;border-radius:8px;transition:opacity .15s}
+.opt .k{font-family:var(--mono);font-weight:600;color:var(--seal);min-width:1.4ch}
+.opt .t{font-family:var(--hanzi);font-size:20px;line-height:1.5}
+.opt.used{opacity:.35}
+.opt.used .t{text-decoration:line-through;text-decoration-thickness:1px}
+.opt .sub{display:block;font-family:var(--ui);font-size:13px;color:var(--muted);line-height:1.4}
+.q{display:grid;grid-template-columns:2.2em 1fr;gap:4px 10px;padding:14px 0;border-top:1px solid var(--rule)}
+.q:first-of-type{border-top:0}
+.num{font-family:var(--mono);font-weight:600;color:var(--muted);padding-top:4px}
+.qt{font-family:var(--hanzi);font-size:21px;line-height:1.6;min-width:0}
+.qt .blank{display:inline-block;min-width:2.6em;border-bottom:2px solid var(--ink);text-align:center;font-weight:700;color:var(--seal)}
+.qt .line{display:block}
+.ex .qt{color:var(--muted)}
+.bubbles{grid-column:2;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.bubble{font-family:var(--mono);font-weight:600;font-size:14px;width:38px;height:34px;border:1.5px solid var(--rule);background:transparent;color:var(--ink);border-radius:8px;cursor:pointer}
+.bubble[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.bubble.right{background:var(--jade);border-color:var(--jade);color:#fff}
+.bubble.wrong{background:var(--seal);border-color:var(--seal);color:#fff}
+.bubble.should{border-color:var(--jade);box-shadow:inset 0 0 0 2px var(--jade)}
+.veil{position:relative}
+.veil.on > *:not(.startcover){filter:blur(7px);pointer-events:none;user-select:none}
+.startcover{display:none}
+.veil.on .startcover{display:flex;position:absolute;inset:0;z-index:3;align-items:center;justify-content:center;flex-direction:column;gap:10px;text-align:center}
+.startcover .btn{font-size:18px;padding:12px 28px}
+.peek{font:inherit;font-size:13px;border:0;background:none;color:var(--muted);text-decoration:underline;text-underline-offset:3px;cursor:pointer;margin-left:6px}
+.gloss{grid-column:2;font-size:14px;color:var(--muted);line-height:1.5}
+.gloss .py{color:var(--ink)}
+.result{border-radius:12px;padding:16px 18px;display:flex;flex-direction:column;gap:6px;border:1px solid var(--rule);background:var(--sheet)}
+.result .big{font-family:var(--mono);font-size:22px;font-weight:600}
+.method{display:flex;flex-direction:column;gap:16px}
+.method h3{font-family:var(--hanzi);font-size:20px;margin:0}
+.method p,.method li{max-width:68ch}
+.method ol,.method ul{margin:0;padding-left:1.3em;display:flex;flex-direction:column;gap:6px}
+.method a{color:var(--seal)}
+.ladder{width:100%;border-collapse:collapse;font-size:14px}
+.ladder th,.ladder td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--rule);font-variant-numeric:tabular-nums}
+.ladder th{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.tablewrap{overflow-x:auto}
+.note{font-size:13px;color:var(--muted)}
+.tile{font-family:var(--hanzi);font-size:20px;border:1.5px solid var(--rule);background:var(--paper);color:var(--ink);border-radius:8px;padding:6px 12px;cursor:pointer}
+.tile.on{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.built{display:flex;flex-wrap:wrap;gap:6px;align-items:center;min-height:48px;padding:8px;border:1.5px dashed var(--rule);border-radius:10px}
+.endp{font-family:var(--hanzi);font-size:20px}
+.pool{display:flex;flex-wrap:wrap;gap:8px}
+.wfb{border-radius:8px;padding:10px 12px;background:var(--paper);line-height:1.6}
+.wfb.good{background:var(--jade-soft)} .wfb.bad{background:var(--seal-soft)}
+.wfb .py{color:var(--ink)}
+.pyblank{color:var(--seal);font-family:var(--ui);font-weight:600}
+.bigchar{font-family:var(--hanzi);font-size:72px;line-height:1.1;color:var(--seal)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="eyebrow">HSK 3 · 阅读 · 第一、二部分</div>
+    <h1>HSK 3 Reading Trainer</h1>
+    <p class="lede">Timed sets in the exact exam format, built around one learner's weakest words. Sets 13–18 (Part 1) and 7–14 (Part 2) use the words that failed most often in the flashcards. The two 书写 tabs train the same words for the writing section. Hanzi only. Six questions, six options, like the real exam blocks. Exam pace is about 5 minutes per set; the first attempt took about 24.</p>
+  </header>
+
+  <div class="tabs" role="tablist">
+    <button class="tab" role="tab" id="tab-p1" aria-selected="true">第一部分 · 配对</button>
+    <button class="tab" role="tab" id="tab-p2" aria-selected="false">第二部分 · 填空</button>
+    <button class="tab" role="tab" id="tab-w1" aria-selected="false">书写 · 排序</button>
+    <button class="tab" role="tab" id="tab-w2" aria-selected="false">书写 · 汉字</button>
+    <button class="tab" role="tab" id="tab-m" aria-selected="false">方法 · Method</button>
+  </div>
+
+  <section id="drill">
+    <div class="wrap" style="gap:16px">
+      <div class="sets" id="sets"></div>
+      <div class="bar">
+        <div class="clock" id="clock">0:00</div>
+        <div class="pace" id="pace">Starts on your first answer.</div>
+        <div class="spacer"></div>
+        <button class="btn" id="startBtn">开始 · Start</button>
+        <button class="btn ghost" id="restart">重来</button>
+        <button class="btn" id="check" disabled>交卷</button>
+      </div>
+      <div class="sheet" id="optSheet"></div>
+      <div class="sheet" id="qSheet"></div>
+      <div class="result" id="result" hidden></div>
+    </div>
+  </section>
+
+  <section id="writing" hidden>
+    <div class="wrap" style="gap:16px">
+      <p class="note" style="margin:0">Writing section of the exam, built from the words one learner kept missing: part 1 puts words in order, part 2 gives pinyin and you write the character by hand.</p>
+      <div class="sets" id="wsets"></div>
+      <div class="sheet" id="wSheet"></div>
+    </div>
+  </section>
+
+  <section id="method" class="method" hidden>
+    <div class="sheet method">
+      <h3>每天30分钟 · Daily 30 minutes until 21 Nov</h3>
+      <ol>
+        <li><b>One set here (5 min).</b> <b>Function first:</b> for each question, name what it needs before you look for the answer: an offer needs yes/no thanks, 怎么/为什么 needs a reason, 什么时候/几点 needs a time, a 吗 question needs yes or no. A word that appears in both the question and an option is often a trap (sets 七 and 十 are built on it). Read all six options first and underline one key word in each. Answer the sure ones first. Used options grey out automatically: that's the elimination. Leave the last one for last, never force it: before the last pick, check that both remaining pairs make sense. One wrong pick almost always costs two points.</li>
+        <li><b>A shared word proves nothing.</b> It's a reason to look twice, not to rule an option in or out. <b>怎么 has two jobs:</b> with 这么 / 才 / 没 / 又 it asks <i>why</i> (answer: a reason or an apology); with a plain verb it asks <i>how</i> (answer: a way or a method). Sets 13 and 14 train exactly this.</li>
+        <li><b>One real exam block (10 min).</b> Reading Part 1 or Part 2 (10 items) from an official past paper, on paper, with a timer. Target: 10 minutes, then 8.</li>
+        <li><b>Repeated reading (10 min).</b> Pick one short text (a Du Chinese story at HSK 3 level, or a Part 3 passage). Read it three times, timing each read. Reading the same text again until it flows is one of the few reading methods with direct evidence for Chinese: it raised fluency, character recognition and comprehension, and the gains carried over to new texts.</li>
+        <li><b>Misses to Anki (5 min).</b> Every word that slowed you down gets a Hanzi-only sentence card.</li>
+      </ol>
+    </div>
+
+    <div class="sheet method">
+      <h3>速度目标 · Pace ladder</h3>
+      <div class="tablewrap"><table class="ladder">
+        <thead><tr><th>Week</th><th>Per set of 6</th><th>Per exam block of 10</th><th>Meaning</th></tr></thead>
+        <tbody>
+          <tr><td>19–25 Oct</td><td>≤ 10:00</td><td>≤ 17:00</td><td>2× faster than baseline</td></tr>
+          <tr><td>26 Oct – 1 Nov</td><td>≤ 8:00</td><td>≤ 13:00</td><td>mock on 1 Nov</td></tr>
+          <tr><td>2–8 Nov</td><td>≤ 6:00</td><td>≤ 10:00</td><td>close to exam pace</td></tr>
+          <tr><td>9–21 Nov</td><td>≤ 5:00</td><td>≤ 8:00</td><td>exam pace with time left for Part 3</td></tr>
+        </tbody>
+      </table></div>
+      <p class="note">Exam: 30 reading questions in about 30 minutes. Do Part 3 (short passages, your strongest) first, then Parts 1 and 2.</p>
+    </div>
+
+    <div class="sheet method">
+      <h3>材料 · Where the real papers are</h3>
+      <ul>
+        <li><a href="https://www.confuciusinstitute.manchester.ac.uk/study/testing/hsk/hsk-learning-resources/" target="_blank" rel="noopener">Confucius Institute Manchester</a>: five official HSK 3 papers (H31327, H31328, H31329, H31330, H31332) with answers and audio. That's 10 Part 1 and 10 Part 2 blocks: one a day until the exam.</li>
+        <li><a href="https://hskmock.com/en/blog/309.html" target="_blank" rel="noopener">HSK Mock</a>: timed online mocks (2.0 and the new 3.0 format) for the full mocks on 1 and 14 Nov.</li>
+        <li><a href="https://pandarin.net/new-hsk/level3/" target="_blank" rel="noopener">New HSK 3 sample paper</a> with speaking part, for the 3.0 baseline this week.</li>
+        <li>Du Chinese: filter to the HSK 3 level, turn pinyin off, read once, read again, then read a third time with a timer, and only then listen. Short stories with dialogue train exactly the reply-matching of Part 1.</li>
+      </ul>
+      <p class="note">Research: <a href="https://benjamins.com/catalog/jicb.00009.kne" target="_blank" rel="noopener">Knell &amp; Kao (2020), repeated readings in Chinese</a>.</p>
+    </div>
+  </section>
+</div>
+
+<script>
+const P1 = [
+ {name:"一", opts:{
+   a:["是啊，你喜欢就多吃一点儿。","Shì a, nǐ xǐhuan jiù duō chī yìdiǎnr.","Yes, if you like it, have some more."],
+   b:["不太满意，阅读还是太慢了。","Bú tài mǎnyì, yuèdú háishi tài màn le.","Not really, my reading is still too slow."],
+   c:["别着急，你最后一次用它是在哪儿？","Bié zháojí, nǐ zuìhòu yí cì yòng tā shì zài nǎr?","Don't worry. Where did you last use it?"],
+   d:["孩子们都去公园玩儿了。","Háizimen dōu qù gōngyuán wánr le.","The kids have all gone to play in the park."],
+   e:["放心吧，我帮你照顾它。","Fàngxīn ba, wǒ bāng nǐ zhàogù tā.","Don't worry, I'll look after it for you."],
+   f:["有，往前走一百米就到了。","Yǒu, wǎng qián zǒu yìbǎi mǐ jiù dào le.","Yes, walk 100 metres ahead and you're there."]},
+  ex:["请问，这附近有银行吗？","Qǐngwèn, zhè fùjìn yǒu yínháng ma?","Excuse me, is there a bank nearby?","f"],
+  qs:[["我的手机找不到了，怎么办？","Wǒ de shǒujī zhǎo bu dào le, zěnme bàn?","I can't find my phone, what do I do?","c"],
+      ["这个蛋糕是你自己做的？太好吃了！","Zhège dàngāo shì nǐ zìjǐ zuò de? Tài hǎochī le!","You made this cake yourself? It's delicious!","a"],
+      ["我下个月要去上海，我的小狗怎么办？","Wǒ xià ge yuè yào qù Shànghǎi, wǒ de xiǎo gǒu zěnme bàn?","I'm going to Shanghai next month. What about my puppy?","e"],
+      ["你对这次考试的成绩满意吗？","Nǐ duì zhè cì kǎoshì de chéngjì mǎnyì ma?","Are you happy with your result this time?","b"],
+      ["奇怪，今天家里怎么这么安静？","Qíguài, jīntiān jiā li zěnme zhème ānjìng?","Strange, why is it so quiet at home today?","d"]]},
+ {name:"二", opts:{
+   a:["他发烧了，今天请假了。","Tā fāshāo le, jīntiān qǐngjià le.","He has a fever and took the day off."],
+   b:["当然可以，不过下星期你得还给我。","Dāngrán kěyǐ, búguò xià xīngqī nǐ děi huán gěi wǒ.","Of course, but you have to give it back next week."],
+   c:["他们下个月就要结婚了。","Tāmen xià ge yuè jiù yào jiéhūn le.","They're getting married next month."],
+   d:["是新来的邻居，昨天刚搬进来。","Shì xīn lái de línjū, zuótiān gāng bān jìnlai.","The new neighbour. He only moved in yesterday."],
+   e:["又新鲜又便宜，我买了两公斤。","Yòu xīnxiān yòu piányi, wǒ mǎile liǎng gōngjīn.","Fresh and cheap, I bought two kilos."],
+   f:["我觉得比上次容易多了。","Wǒ juéde bǐ shàng cì róngyì duō le.","Much easier than last time, I think."]},
+  ex:["今天的考试怎么样？","Jīntiān de kǎoshì zěnmeyàng?","How was today's exam?","f"],
+  qs:[["今天怎么没看见小王？","Jīntiān zěnme méi kànjiàn Xiǎo Wáng?","Why haven't I seen Xiao Wang today?","a"],
+      ["你的照相机能借我用几天吗？","Nǐ de zhàoxiàngjī néng jiè wǒ yòng jǐ tiān ma?","Can I borrow your camera for a few days?","b"],
+      ["楼下那个年轻人是谁？","Lóu xià nàge niánqīng rén shì shéi?","Who's that young man downstairs?","d"],
+      ["你在超市买的香蕉怎么样？","Nǐ zài chāoshì mǎi de xiāngjiāo zěnmeyàng?","How are the bananas you bought at the supermarket?","e"],
+      ["听说小李和她男朋友的关系越来越好了。","Tīngshuō Xiǎo Lǐ hé tā nánpéngyou de guānxi yuè lái yuè hǎo le.","I hear Xiao Li and her boyfriend are getting closer and closer.","c"]]},
+ {name:"三", opts:{
+   a:["我每天早上都去锻炼身体。","Wǒ měi tiān zǎoshang dōu qù duànliàn shēntǐ.","I exercise every morning."],
+   b:["秋天，不冷也不热。","Qiūtiān, bù lěng yě bú rè.","Autumn: not cold and not hot."],
+   c:["外面刮风了，你多穿一件衣服吧。","Wàimiàn guā fēng le, nǐ duō chuān yí jiàn yīfu ba.","It's windy outside, put on another layer."],
+   d:["空调坏了，我已经给经理打电话了。","Kōngtiáo huài le, wǒ yǐjīng gěi jīnglǐ dǎ diànhuà le.","The air conditioning is broken; I've already called the manager."],
+   e:["他从小就对体育感兴趣。","Tā cóng xiǎo jiù duì tǐyù gǎn xìngqù.","He's been interested in sport since he was little."],
+   f:["没问题，我们七点在门口见。","Méi wèntí, wǒmen qī diǎn zài ménkǒu jiàn.","No problem, see you at the door at seven."]},
+  ex:["明天晚上一起去看电影，好吗？","Míngtiān wǎnshang yìqǐ qù kàn diànyǐng, hǎo ma?","Shall we go to a film tomorrow evening?","f"],
+  qs:[["你最近瘦了，身体也比以前健康多了。","Nǐ zuìjìn shòu le, shēntǐ yě bǐ yǐqián jiànkāng duō le.","You've lost weight lately and look much healthier.","a"],
+      ["一年四个季节，你最喜欢哪个？","Yì nián sì ge jìjié, nǐ zuì xǐhuan nǎge?","Of the four seasons, which do you like best?","b"],
+      ["房间里怎么这么热？","Fángjiān li zěnme zhème rè?","Why is it so hot in the room?","d"],
+      ["我马上就要出去了。","Wǒ mǎshàng jiù yào chūqu le.","I'm about to go out.","c"],
+      ["你儿子为什么每个周末都去踢足球？","Nǐ érzi wèishénme měi ge zhōumò dōu qù tī zúqiú?","Why does your son play football every weekend?","e"]]},
+ {name:"四", opts:{
+   a:["会议九点开始，现在还早。","Huìyì jiǔ diǎn kāishǐ, xiànzài hái zǎo.","The meeting starts at nine; it's still early."],
+   b:["经理还没决定，他说明天告诉我们。","Jīnglǐ hái méi juédìng, tā shuō míngtiān gàosu wǒmen.","The manager hasn't decided; he'll tell us tomorrow."],
+   c:["我已经给你发电子邮件了，你看一下。","Wǒ yǐjīng gěi nǐ fā diànzǐ yóujiàn le, nǐ kàn yíxià.","I've already emailed you, have a look."],
+   d:["还差一点儿，再给我十分钟。","Hái chà yìdiǎnr, zài gěi wǒ shí fēnzhōng.","Not quite; give me ten more minutes."],
+   e:["我不同意，那个地方太远了。","Wǒ bù tóngyì, nàge dìfang tài yuǎn le.","I don't agree, that place is too far."],
+   f:["我检查过了，没有问题。","Wǒ jiǎnchá guo le, méiyǒu wèntí.","I've checked them, no problems."]},
+  ex:["这些句子你检查了吗？","Zhèxiē jùzi nǐ jiǎnchá le ma?","Have you checked these sentences?","f"],
+  qs:[["作业完成了吗？我们该走了。","Zuòyè wánchéng le ma? Wǒmen gāi zǒu le.","Is the homework done? We should go.","d"],
+      ["快点儿，要迟到了！","Kuài diǎnr, yào chídào le!","Hurry, we'll be late!","a"],
+      ["公司的新办法什么时候开始用？","Gōngsī de xīn bànfǎ shénme shíhou kāishǐ yòng?","When does the company start using the new method?","b"],
+      ["明天几点去机场，你告诉我了吗？","Míngtiān jǐ diǎn qù jīchǎng, nǐ gàosu wǒ le ma?","Did you tell me what time we go to the airport tomorrow?","c"],
+      ["这个周末我们去城北的山上爬山，怎么样？","Zhège zhōumò wǒmen qù chéng běi de shān shang pá shān, zěnmeyàng?","How about hiking in the hills north of town this weekend?","e"]]},
+ {name:"五", tip:"言外之意", opts:{
+   a:["虽然有点儿贵，但是我很喜欢。","Suīrán yǒudiǎnr guì, dànshì wǒ hěn xǐhuan.","It was a bit expensive, but I love it."],
+   b:["饭马上就好，你先洗手吧。","Fàn mǎshàng jiù hǎo, nǐ xiān xǐ shǒu ba.","Food's almost ready, wash your hands first."],
+   c:["好多了，就是走路的时候还有点儿疼。","Hǎo duō le, jiùshì zǒulù de shíhou hái yǒudiǎnr téng.","Much better, it just still hurts a bit when I walk."],
+   d:["我也不太清楚，你问问司机吧。","Wǒ yě bú tài qīngchu, nǐ wènwen sījī ba.","I'm not sure either, ask the driver."],
+   e:["当然记得，他是我们的数学老师。","Dāngrán jìde, tā shì wǒmen de shùxué lǎoshī.","Of course I remember, he was our maths teacher."],
+   f:["不用了，我吃饱了。","Bú yòng le, wǒ chī bǎo le.","No thanks, I'm full."]},
+  ex:["再吃一点儿吧？","Zài chī yìdiǎnr ba?","Have a bit more?","f"],
+  qs:[["妈妈，我饿了，什么时候吃饭？","Māma, wǒ è le, shénme shíhou chī fàn?","Mum, I'm hungry. When do we eat?","b"],
+      ["你的脚怎么样了？","Nǐ de jiǎo zěnmeyàng le?","How's your foot?","c"],
+      ["你新买的裙子真漂亮，贵不贵？","Nǐ xīn mǎi de qúnzi zhēn piàoliang, guì bu guì?","Your new skirt is lovely. Was it expensive?","a"],
+      ["这辆公共汽车到不到黄河边？","Zhè liàng gōnggòng qìchē dào bu dào Huáng Hé biān?","Does this bus go to the Yellow River?","d"],
+      ["你还记得王叔叔吗？","Nǐ hái jìde Wáng shūshu ma?","Do you still remember Uncle Wang?","e"]]},
+ {name:"六", opts:{
+   a:["我刚才在路上遇到他了。","Wǒ gāngcái zài lù shang yùdào tā le.","I just ran into him on the street."],
+   b:["问题终于解决了，大家都很高兴。","Wèntí zhōngyú jiějué le, dàjiā dōu hěn gāoxìng.","The problem is finally solved, everyone's happy."],
+   c:["别害怕，是外面在刮风。","Bié hàipà, shì wàimiàn zài guā fēng.","Don't be scared, it's just the wind outside."],
+   d:["她很聪明，三岁就会讲故事了。","Tā hěn cōngming, sān suì jiù huì jiǎng gùshi le.","She was clever; she could tell stories at three."],
+   e:["我们打算坐火车回去，比飞机便宜。","Wǒmen dǎsuàn zuò huǒchē huíqu, bǐ fēijī piányi.","We plan to take the train back; it's cheaper than flying."],
+   f:["对不起，我看错时间了。","Duìbuqǐ, wǒ kàn cuò shíjiān le.","Sorry, I got the time wrong."]},
+  ex:["你怎么现在才来？","Nǐ zěnme xiànzài cái lái?","Why are you only coming now?","f"],
+  qs:[["电脑的问题怎么样了？","Diànnǎo de wèntí zěnmeyàng le?","What happened with the computer problem?","b"],
+      ["你女儿小时候是什么样的孩子？","Nǐ nǚ'ér xiǎo shíhou shì shénme yàng de háizi?","What was your daughter like as a child?","d"],
+      ["那是什么声音？我有点儿怕。","Nà shì shénme shēngyīn? Wǒ yǒudiǎnr pà.","What's that sound? I'm a bit scared.","c"],
+      ["你怎么知道小张回来了？","Nǐ zěnme zhīdào Xiǎo Zhāng huílai le?","How do you know Xiao Zhang is back?","a"],
+      ["春节你们怎么回家？","Chūnjié nǐmen zěnme huí jiā?","How are you getting home for Spring Festival?","e"]]},
+ {name:"七", tip:"同词陷阱", opts:{
+   a:["我也觉得，我们下次换一家吧。","Wǒ yě juéde, wǒmen xià cì huàn yì jiā ba.","I think so too; let's try another place next time."],
+   b:["还没有，我明天再去问问。","Hái méiyǒu, wǒ míngtiān zài qù wènwen.","Not yet, I'll go and ask again tomorrow."],
+   c:["我刚才给他打电话了，他说马上就到。","Wǒ gāngcái gěi tā dǎ diànhuà le, tā shuō mǎshàng jiù dào.","I just called him; he says he'll be here any minute."],
+   d:["对不起，我的手机没电了。","Duìbuqǐ, wǒ de shǒujī méi diàn le.","Sorry, my phone's battery was dead."],
+   e:["平时去打网球，有时候在家看看书。","Píngshí qù dǎ wǎngqiú, yǒu shíhou zài jiā kànkan shū.","Usually I play tennis; sometimes I read at home."],
+   f:["颜色很漂亮，就是有点儿短。","Yánsè hěn piàoliang, jiùshì yǒudiǎnr duǎn.","The colour is lovely, it's just a bit short."]},
+  ex:["这条裙子你觉得怎么样？","Zhè tiáo qúnzi nǐ juéde zěnmeyàng?","What do you think of this skirt?","f"],
+  qs:[["这家饭馆的菜怎么越来越不好吃了？","Zhè jiā fànguǎn de cài zěnme yuè lái yuè bù hǎochī le?","Why is the food here getting worse and worse?","a"],
+      ["你的护照办好了吗？","Nǐ de hùzhào bàn hǎo le ma?","Is your passport ready?","b"],
+      ["小李怎么还没来？","Xiǎo Lǐ zěnme hái méi lái?","Why isn't Xiao Li here yet?","c"],
+      ["昨天晚上你怎么不接电话？","Zuótiān wǎnshang nǐ zěnme bù jiē diànhuà?","Why didn't you answer the phone last night?","d"],
+      ["你周末一般做什么？","Nǐ zhōumò yìbān zuò shénme?","What do you usually do at weekends?","e"]]},
+ {name:"八", opts:{
+   a:["不行，你发烧了，在家好好休息吧。","Bù xíng, nǐ fāshāo le, zài jiā hǎohǎo xiūxi ba.","No, you've got a fever. Stay home and rest."],
+   b:["差不多了，还有最后一个问题。","Chàbuduō le, hái yǒu zuìhòu yí ge wèntí.","Almost, there's one last question."],
+   c:["别担心，我们一起想办法。","Bié dānxīn, wǒmen yìqǐ xiǎng bànfǎ.","Don't worry, we'll find a way together."],
+   d:["是我奶奶送给我的生日礼物。","Shì wǒ nǎinai sòng gěi wǒ de shēngrì lǐwù.","It's a birthday present from my grandma."],
+   e:["好啊，我也很久没去了。","Hǎo a, wǒ yě hěn jiǔ méi qù le.","Sure, I haven't been for ages either."],
+   f:["他说他最近很忙，下次再来。","Tā shuō tā zuìjìn hěn máng, xià cì zài lái.","He says he's busy lately and will come next time."]},
+  ex:["你的作业写完了吗？","Nǐ de zuòyè xiě wán le ma?","Have you finished your homework?","b"],
+  qs:[["妈妈，我今天能去学校吗？","Māma, wǒ jīntiān néng qù xuéxiào ma?","Mum, can I go to school today?","a"],
+      ["这个问题太难了，我一个人解决不了。","Zhège wèntí tài nán le, wǒ yí ge rén jiějué bù liǎo.","This problem is too hard; I can't solve it on my own.","c"],
+      ["你这块手表真漂亮，在哪儿买的？","Nǐ zhè kuài shǒubiǎo zhēn piàoliang, zài nǎr mǎi de?","Your watch is lovely, where did you buy it?","d"],
+      ["周末我们去公园骑自行车，怎么样？","Zhōumò wǒmen qù gōngyuán qí zìxíngchē, zěnmeyàng?","How about cycling in the park this weekend?","e"],
+      ["你叔叔怎么没来参加晚会？","Nǐ shūshu zěnme méi lái cānjiā wǎnhuì?","Why didn't your uncle come to the party?","f"]]},
+ {name:"九", tip:"言外之意", opts:{
+   a:["对不起，明天我要带孩子去医院。","Duìbuqǐ, míngtiān wǒ yào dài háizi qù yīyuàn.","Sorry, tomorrow I have to take my child to hospital."],
+   b:["我看了一半就睡着了。","Wǒ kàn le yí bàn jiù shuìzháo le.","I fell asleep halfway through."],
+   c:["你说得比去年清楚多了。","Nǐ shuō de bǐ qùnián qīngchu duō le.","You speak much more clearly than last year."],
+   d:["你最好多穿一件衣服。","Nǐ zuì hǎo duō chuān yí jiàn yīfu.","You'd better put on another layer."],
+   e:["等你吃完早饭就走。","Děng nǐ chī wán zǎofàn jiù zǒu.","As soon as you've finished breakfast."],
+   f:["他每天晚上都唱歌，一直唱到十二点。","Tā měi tiān wǎnshang dōu chàng gē, yìzhí chàng dào shí'èr diǎn.","He sings every night, right up to midnight."]},
+  ex:["你的新邻居怎么样？","Nǐ de xīn línjū zěnmeyàng?","What's your new neighbour like?","f"],
+  qs:[["你明天能来帮我搬家吗？","Nǐ míngtiān néng lái bāng wǒ bānjiā ma?","Can you help me move house tomorrow?","a"],
+      ["那个电影好看吗？","Nàge diànyǐng hǎokàn ma?","Was that film any good?","b"],
+      ["你觉得我的中文水平怎么样？","Nǐ juéde wǒ de Zhōngwén shuǐpíng zěnmeyàng?","What do you think of my level of Chinese?","c"],
+      ["外面冷不冷？","Wàimiàn lěng bu lěng?","Is it cold outside?","d"],
+      ["我们几点出发？","Wǒmen jǐ diǎn chūfā?","What time are we leaving?","e"]]},
+ {name:"十", tip:"同词陷阱", opts:{
+   a:["不是，我是坐地铁来的。","Bú shì, wǒ shì zuò dìtiě lái de.","No, I came by underground."],
+   b:["找到了，在床下面。","Zhǎodào le, zài chuáng xiàmiàn.","Yes, it was under the bed."],
+   c:["因为路上车太多了。","Yīnwèi lù shang chē tài duō le.","Because there was too much traffic."],
+   d:["还是开车去吧，坐公共汽车要换两次车。","Háishi kāichē qù ba, zuò gōnggòng qìchē yào huàn liǎng cì chē.","Let's drive; by bus you'd have to change twice."],
+   e:["地铁站离我家太远了。","Dìtiězhàn lí wǒ jiā tài yuǎn le.","The station is too far from my home."],
+   f:["有啊，你有什么事吗？","Yǒu a, nǐ yǒu shénme shì ma?","Yes, why, what's up?"]},
+  ex:["这个周末你有空吗？","Zhège zhōumò nǐ yǒu kòng ma?","Are you free this weekend?","f"],
+  qs:[["你今天是开车来的吗？","Nǐ jīntiān shì kāichē lái de ma?","Did you drive here today?","a"],
+      ["你的护照找到了吗？","Nǐ de hùzhào zhǎodào le ma?","Did you find your passport?","b"],
+      ["你怎么来得这么晚？","Nǐ zěnme lái de zhème wǎn?","Why are you so late?","c"],
+      ["我们怎么去机场？","Wǒmen zěnme qù jīchǎng?","How do we get to the airport?","d"],
+      ["你为什么不坐地铁上班？","Nǐ wèishénme bú zuò dìtiě shàngbān?","Why don't you take the underground to work?","e"]]},
+ {name:"十一", opts:{
+   a:["听说杭州的西湖很漂亮，春天去最好。","Tīngshuō Hángzhōu de Xīhú hěn piàoliang, chūntiān qù zuì hǎo.","I hear West Lake in Hangzhou is beautiful; spring is the best time."],
+   b:["你可以用手机扫一下，很方便。","Nǐ kěyǐ yòng shǒujī sǎo yíxià, hěn fāngbiàn.","Just scan with your phone, it's easy."],
+   c:["三百块，你给我两百五就行了。","Sānbǎi kuài, nǐ gěi wǒ liǎngbǎi wǔ jiù xíng le.","Three hundred, but 250 is fine."],
+   d:["先坐高铁去上海，再坐飞机去北京。","Xiān zuò gāotiě qù Shànghǎi, zài zuò fēijī qù Běijīng.","High-speed train to Shanghai first, then fly to Beijing."],
+   e:["不用了，我自己能拿。","Búyòng le, wǒ zìjǐ néng ná.","No need, I can carry it myself."],
+   f:["别担心，这儿到处都有人会说英文。","Bié dānxīn, zhèr dàochù dōu yǒu rén huì shuō Yīngwén.","Don't worry, there are English speakers everywhere here."]},
+  ex:["我不会说中文，怎么办？","Wǒ bú huì shuō Zhōngwén, zěnme bàn?","I can't speak Chinese, what do I do?","f"],
+  qs:[["我没带钱，怎么买票？","Wǒ méi dài qián, zěnme mǎi piào?","I didn't bring any cash; how do I buy a ticket?","b"],
+      ["这件大衣多少钱？","Zhè jiàn dàyī duōshao qián?","How much is this coat?","c"],
+      ["你们打算怎么走？","Nǐmen dǎsuàn zěnme zǒu?","How are you planning to travel?","d"],
+      ["你的行李箱太重了，我帮你吧。","Nǐ de xínglixiāng tài zhòng le, wǒ bāng nǐ ba.","Your suitcase is too heavy, let me help you.","e"],
+      ["中国哪个城市你最想去？","Zhōngguó nǎge chéngshì nǐ zuì xiǎng qù?","Which Chinese city do you most want to visit?","a"]]},
+ {name:"十二", tip:"新词", opts:{
+   a:["只要你每天练习，就一定能提高。","Zhǐyào nǐ měi tiān liànxí, jiù yídìng néng tígāo.","As long as you practise every day, you'll definitely improve."],
+   b:["除了小王以外，大家都来了。","Chúle Xiǎo Wáng yǐwài, dàjiā dōu lái le.","Everyone came except Xiao Wang."],
+   c:["快要下雨了，带上伞吧。","Kuàiyào xià yǔ le, dài shang sǎn ba.","It's about to rain, take an umbrella."],
+   d:["我觉得跟天气有关，今年雨太多了。","Wǒ juéde gēn tiānqì yǒuguān, jīnnián yǔ tài duō le.","I think it has to do with the weather; there's been too much rain this year."],
+   e:["知道，我一直在关注他的比赛。","Zhīdào, wǒ yìzhí zài guānzhù tā de bǐsài.","Yes, I've been following his matches all along."],
+   f:["他得到了第一名，大家都很高兴。","Tā dédào le dì-yī míng, dàjiā dōu hěn gāoxìng.","He came first and everyone's happy."]},
+  ex:["我的中文说得不好，能学会吗？","Wǒ de Zhōngwén shuō de bù hǎo, néng xué huì ma?","My spoken Chinese isn't good. Can I learn it?","a"],
+  qs:[["今天的会议谁没来？","Jīntiān de huìyì shéi méi lái?","Who didn't come to today's meeting?","b"],
+      ["你看，天怎么这么黑？","Nǐ kàn, tiān zěnme zhème hēi?","Look, why is the sky so dark?","c"],
+      ["今年的苹果怎么这么贵？","Jīnnián de píngguǒ zěnme zhème guì?","Why are apples so expensive this year?","d"],
+      ["你知道那个网球运动员吗？","Nǐ zhīdào nàge wǎngqiú yùndòngyuán ma?","Do you know that tennis player?","e"],
+      ["昨天的比赛小张跑得怎么样？","Zuótiān de bǐsài Xiǎo Zhāng pǎo de zěnmeyàng?","How did Xiao Zhang run in yesterday's race?","f"]]},
+ {name:"十三", tip:"怎么", opts:{
+   a:["对不起，路上自行车坏了。","Duìbuqǐ, lù shang zìxíngchē huài le.","Sorry, my bike broke down on the way."],
+   b:["往前走，到第二个路口往左。","Wǎng qián zǒu, dào dì-èr ge lùkǒu wǎng zuǒ.","Go straight on and turn left at the second crossing."],
+   c:["我的护照找不到了，下午就要坐飞机。","Wǒ de hùzhào zhǎo bu dào le, xiàwǔ jiù yào zuò fēijī.","I can't find my passport and I'm flying this afternoon."],
+   d:["左边是“木”，右边是“几”。","Zuǒbian shì “mù”, yòubian shì “jǐ”.","木 on the left, 几 on the right."],
+   e:["我发烧了，在家休息了一天。","Wǒ fāshāo le, zài jiā xiūxi le yì tiān.","I had a fever and rested at home all day."],
+   f:["我觉得我们应该先问问经理。","Wǒ juéde wǒmen yīnggāi xiān wènwen jīnglǐ.","I think we should ask the manager first."]},
+  ex:["这个问题怎么解决？","Zhège wèntí zěnme jiějué?","How do we solve this problem?","f"],
+  qs:[["你怎么又迟到了？","Nǐ zěnme yòu chídào le?","Why are you late again?","a"],
+      ["去你家怎么走？","Qù nǐ jiā zěnme zǒu?","How do I get to your place?","b"],
+      ["你怎么这么着急？","Nǐ zěnme zhème zháojí?","Why are you in such a hurry?","c"],
+      ["“飞机”的“机”字怎么写？","“Fēijī” de “jī” zì zěnme xiě?","How do you write the 机 in 飞机?","d"],
+      ["你怎么没参加昨天的会议？","Nǐ zěnme méi cānjiā zuótiān de huìyì?","Why didn't you come to yesterday's meeting?","e"]]},
+ {name:"十四", tip:"怎么", opts:{
+   a:["被弟弟拿走了，他说明天还给我。","Bèi dìdi ná zǒu le, tā shuō míngtiān huán gěi wǒ.","My little brother took it; he says he'll give it back tomorrow."],
+   b:["我们下个星期就要搬家了。","Wǒmen xià ge xīngqī jiù yào bānjiā le.","We're moving house next week."],
+   c:["是小王告诉我的。","Shì Xiǎo Wáng gàosu wǒ de.","Xiao Wang told me."],
+   d:["我每天都去锻炼，啤酒也不喝了。","Wǒ měi tiān dōu qù duànliàn, píjiǔ yě bù hē le.","I work out every day, and I've stopped drinking beer."],
+   e:["很简单，先放肉，再放菜。","Hěn jiǎndān, xiān fàng ròu, zài fàng cài.","Easy: first the meat, then the vegetables."],
+   f:["我们是在一个比赛上认识的。","Wǒmen shì zài yí ge bǐsài shang rènshi de.","We met at a competition."]},
+  ex:["你们是怎么认识的？","Nǐmen shì zěnme rènshi de?","How did you two meet?","f"],
+  qs:[["你的词典怎么不见了？","Nǐ de cídiǎn zěnme bú jiàn le?","Why has your dictionary disappeared?","a"],
+      ["你家里怎么都是箱子？","Nǐ jiā li zěnme dōu shì xiāngzi?","Why is your home full of boxes?","b"],
+      ["这件事你是怎么知道的？","Zhè jiàn shì nǐ shì zěnme zhīdào de?","How did you find out about this?","c"],
+      ["你怎么瘦了这么多？","Nǐ zěnme shòu le zhème duō?","How come you've lost so much weight?","d"],
+      ["这个菜怎么做？","Zhège cài zěnme zuò?","How do you make this dish?","e"]]},
+ {name:"十五", opts:{
+   a:["在三楼，出了电梯往右走。","Zài sān lóu, chū le diàntī wǎng yòu zǒu.","On the third floor; turn right out of the lift."],
+   b:["我妻子做的，她做饭特别好吃。","Wǒ qīzi zuò de, tā zuò fàn tèbié hǎochī.","My wife made it; she's a great cook."],
+   c:["我昨天跑了两个小时，现在腿很疼。","Wǒ zuótiān pǎo le liǎng ge xiǎoshí, xiànzài tuǐ hěn téng.","I ran for two hours yesterday, and now my legs hurt."],
+   d:["我在报纸上看到的，是昨天的新闻。","Wǒ zài bàozhǐ shang kàndào de, shì zuótiān de xīnwén.","I saw it in the paper; it was yesterday's news."],
+   e:["买了，在冰箱里，还有香蕉。","Mǎi le, zài bīngxiāng li, hái yǒu xiāngjiāo.","Yes, it's in the fridge, and there are bananas too."],
+   f:["你穿那件白衬衫吧，还有黑皮鞋。","Nǐ chuān nà jiàn bái chènshān ba, hái yǒu hēi píxié.","Wear the white shirt, and the black shoes."]},
+  ex:["明天去见经理，我穿什么好？","Míngtiān qù jiàn jīnglǐ, wǒ chuān shénme hǎo?","I'm meeting the manager tomorrow. What should I wear?","f"],
+  qs:[["请问，王经理的办公室在哪儿？","Qǐngwèn, Wáng jīnglǐ de bàngōngshì zài nǎr?","Excuse me, where is Manager Wang's office?","a"],
+      ["这个蛋糕真好吃，是你买的吗？","Zhège dàngāo zhēn hǎochī, shì nǐ mǎi de ma?","This cake is delicious. Did you buy it?","b"],
+      ["你怎么走得这么慢？","Nǐ zěnme zǒu de zhème màn?","Why are you walking so slowly?","c"],
+      ["这件事你是从哪儿知道的？","Zhè jiàn shì nǐ shì cóng nǎr zhīdào de?","Where did you hear about this?","d"],
+      ["你去超市买牛奶了吗？","Nǐ qù chāoshì mǎi niúnǎi le ma?","Did you get milk at the supermarket?","e"]]},
+ {name:"十六", tip:"新词", opts:{
+   a:["大概还要半个小时，你先坐一下。","Dàgài hái yào bàn ge xiǎoshí, nǐ xiān zuò yíxià.","Probably another half hour; have a seat."],
+   b:["挺好的，就是有点儿贵。","Tǐng hǎo de, jiùshì yǒudiǎnr guì.","Pretty good, just a bit expensive."],
+   c:["看来今天不能去爬山了。","Kànlái jīntiān bù néng qù pá shān le.","Looks like we can't go hiking today."],
+   d:["在第十五页，最下面那个句子。","Zài dì-shíwǔ yè, zuì xiàmiàn nàge jùzi.","On page 15, the sentence at the bottom."],
+   e:["春节的时候，到处都是人。","Chūnjié de shíhou, dàochù dōu shì rén.","At Spring Festival there are people everywhere."],
+   f:["知道，我在网上关注他很久了。","Zhīdào, wǒ zài wǎngshang guānzhù tā hěn jiǔ le.","Yes, I've been following him online for a long time."]},
+  ex:["你知道这个唱歌的年轻人吗？","Nǐ zhīdào zhège chàng gē de niánqīng rén ma?","Do you know this young singer?","f"],
+  qs:[["我的菜怎么还没来？","Wǒ de cài zěnme hái méi lái?","Why hasn't my food come yet?","a"],
+      ["你新买的手机怎么样？","Nǐ xīn mǎi de shǒujī zěnmeyàng?","How's your new phone?","b"],
+      ["外面下大雨了。","Wàimiàn xià dà yǔ le.","It's pouring outside.","c"],
+      ["老师，这个词在哪儿？","Lǎoshī, zhège cí zài nǎr?","Teacher, where's this word?","d"],
+      ["春节去北京旅游怎么样？","Chūnjié qù Běijīng lǚyóu zěnmeyàng?","What about visiting Beijing over Spring Festival?","e"]]},
+ {name:"十七", opts:{
+   a:["谢谢，她今年五十岁了。","Xièxie, tā jīnnián wǔshí suì le.","Thanks, she's fifty this year."],
+   b:["骑自行车，二十分钟就到了。","Qí zìxíngchē, èrshí fēnzhōng jiù dào le.","By bike, it takes twenty minutes."],
+   c:["他发烧了，我们带他去医院吧。","Tā fāshāo le, wǒmen dài tā qù yīyuàn ba.","He has a fever. Let's take him to hospital."],
+   d:["我的邻居，她很喜欢小动物。","Wǒ de línjū, tā hěn xǐhuan xiǎo dòngwù.","My neighbour; she loves small animals."],
+   e:["没关系，你可以去商店换一件。","Méi guānxi, nǐ kěyǐ qù shāngdiàn huàn yí jiàn.","No problem, you can exchange it at the shop."],
+   f:["跟一个老朋友聊天，聊了三个小时。","Gēn yí ge lǎo péngyou liáotiān, liáo le sān ge xiǎoshí.","Chatting with an old friend, for three hours."]},
+  ex:["你昨天晚上做什么了？","Nǐ zuótiān wǎnshang zuò shénme le?","What did you do last night?","f"],
+  qs:[["你妈妈看起来真年轻！","Nǐ māma kàn qǐlai zhēn niánqīng!","Your mum looks so young!","a"],
+      ["你每天怎么去上班？","Nǐ měi tiān zěnme qù shàngbān?","How do you get to work every day?","b"],
+      ["孩子怎么哭了？","Háizi zěnme kū le?","Why is the child crying?","c"],
+      ["你出国的时候，谁照顾你的猫？","Nǐ chūguó de shíhou, shéi zhàogù nǐ de māo?","Who looks after your cat when you're abroad?","d"],
+      ["这件衬衫有点儿小。","Zhè jiàn chènshān yǒudiǎnr xiǎo.","This shirt is a bit small.","e"]]},
+ {name:"十八", tip:"言外之意", opts:{
+   a:["比上次好多了，可是还差五分。","Bǐ shàng cì hǎo duō le, kěshì hái chà wǔ fēn.","Much better than last time, but still five points short."],
+   b:["工作很简单，就是我几乎没有时间休息。","Gōngzuò hěn jiǎndān, jiùshì wǒ jīhū méiyǒu shíjiān xiūxi.","The work is easy; I just hardly ever get a break."],
+   c:["找了三个月，终于有一个公司要我了！","Zhǎo le sān ge yuè, zhōngyú yǒu yí ge gōngsī yào wǒ le!","After three months of looking, a company finally wants me!"],
+   d:["这么好的机会，我怎么会不去！","Zhème hǎo de jīhuì, wǒ zěnme huì bú qù!","Such a great chance, how could I not go!"],
+   e:["别着急，火车十点才开。","Bié zháojí, huǒchē shí diǎn cái kāi.","Don't worry, the train only leaves at ten."],
+   f:["我已经在这儿住了十年了，不想走。","Wǒ yǐjīng zài zhèr zhù le shí nián le, bù xiǎng zǒu.","I've lived here for ten years and don't want to leave."]},
+  ex:["你喜欢这个城市吗？","Nǐ xǐhuan zhège chéngshì ma?","Do you like this city?","f"],
+  qs:[["这次考试你考得怎么样？","Zhè cì kǎoshì nǐ kǎo de zěnmeyàng?","How did the exam go this time?","a"],
+      ["你觉得这个工作怎么样？","Nǐ juéde zhège gōngzuò zěnmeyàng?","What do you think of this job?","b"],
+      ["你找到工作了吗？","Nǐ zhǎodào gōngzuò le ma?","Have you found a job?","c"],
+      ["你要不要跟我们一起去中国？","Nǐ yào bu yào gēn wǒmen yìqǐ qù Zhōngguó?","Do you want to come to China with us?","d"],
+      ["我们还有时间吗？","Wǒmen hái yǒu shíjiān ma?","Do we still have time?","e"]]}
+];
+
+const P2 = [
+ {name:"一", opts:{a:["附近","fùjìn","nearby"],b:["如果","rúguǒ","if"],c:["有名","yǒumíng","famous"],d:["了解","liǎojiě","get to know"],e:["段","duàn","(a) passage / section"],f:["声音","shēngyīn","voice, sound"]},
+  ex:["她说话的___真好听。","Tā shuōhuà de ___ zhēn hǎotīng.","Her ___ is lovely when she speaks.","f"],
+  qs:[["这个饭馆儿很___，每天都有很多客人。","Zhège fànguǎnr hěn ___, měi tiān dōu yǒu hěn duō kèrén.","This restaurant is very ___; it has lots of guests every day.","c"],
+      ["___明天下雨，我们就不去爬山了。","___ míngtiān xià yǔ, wǒmen jiù bú qù pá shān le.","___ it rains tomorrow, we won't go hiking.","b"],
+      ["我家___有一个很大的公园。","Wǒ jiā ___ yǒu yí ge hěn dà de gōngyuán.","There's a big park ___ my home.","a"],
+      ["我想多___一下中国的文化。","Wǒ xiǎng duō ___ yíxià Zhōngguó de wénhuà.","I'd like to ___ Chinese culture better.","d"],
+      ["这___话是什么意思？你明白吗？","Zhè ___ huà shì shénme yìsi? Nǐ míngbai ma?","What does this ___ mean? Do you understand it?","e"]]},
+ {name:"二", opts:{a:["终于","zhōngyú","finally"],b:["影响","yǐngxiǎng","affect"],c:["一般","yìbān","usually"],d:["根据","gēnjù","based on"],e:["而且","érqiě","but also"],f:["必须","bìxū","must"]},
+  ex:["上飞机以前，你___把护照拿出来。","Shàng fēijī yǐqián, nǐ ___ bǎ hùzhào ná chūlai.","Before boarding you ___ take out your passport.","f"],
+  qs:[["手机用得太多，会___你的学习。","Shǒujī yòng de tài duō, huì ___ nǐ de xuéxí.","Using your phone too much will ___ your studies.","b"],
+      ["等了半个小时，公共汽车___来了。","Děngle bàn ge xiǎoshí, gōnggòng qìchē ___ lái le.","After half an hour of waiting, the bus ___ came.","a"],
+      ["我___七点起床，周末起得晚一点儿。","Wǒ ___ qī diǎn qǐchuáng, zhōumò qǐ de wǎn yìdiǎnr.","I ___ get up at seven, a bit later at weekends.","c"],
+      ["这个房间不但很大，___很安静。","Zhège fángjiān búdàn hěn dà, ___ hěn ānjìng.","This room is not only big, ___ very quiet.","e"],
+      ["___你的成绩，你可以上三级的课。","___ nǐ de chéngjì, nǐ kěyǐ shàng sān jí de kè.","___ your results, you can join the level 3 class.","d"]]},
+ {name:"三", opts:{a:["照顾","zhàogù","look after"],b:["几乎","jīhū","almost"],c:["越","yuè","the more"],d:["刚才","gāngcái","just now"],e:["被","bèi","(passive marker)"],f:["关于","guānyú","about"]},
+  ex:["这是一本___中国历史的书。","Zhè shì yì běn ___ Zhōngguó lìshǐ de shū.","This is a book ___ Chinese history.","f"],
+  qs:[["我的自行车___弟弟骑走了。","Wǒ de zìxíngchē ___ dìdi qí zǒu le.","My bike was ridden off ___ my little brother.","e"],
+      ["雨下得___来越大了。","Yǔ xià de ___ lái yuè dà le.","The rain is getting heavier and heavier.","c"],
+      ["他___每天都去图书馆。","Tā ___ měi tiān dōu qù túshūguǎn.","He goes to the library ___ every day.","b"],
+      ["你___说什么？我没听清楚。","Nǐ ___ shuō shénme? Wǒ méi tīng qīngchu.","What did you say ___? I didn't catch it.","d"],
+      ["姐姐工作很忙，没有时间___孩子。","Jiějie gōngzuò hěn máng, méiyǒu shíjiān ___ háizi.","My sister is busy at work and has no time to ___ the kids.","a"]]},
+ {name:"四", dialog:true, opts:{a:["矮","ǎi","short (height)"],b:["耳朵","ěrduo","ear"],c:["借","jiè","borrow"],d:["着急","zháojí","worry, rush"],e:["满意","mǎnyì","satisfied"],f:["疼","téng","hurt"]},
+  ex:["A：你怎么了？|B：我头___，想休息一下。","A: Nǐ zěnme le? B: Wǒ tóu ___, xiǎng xiūxi yíxià.","A: What's wrong? B: My head ___s, I want to rest.","f"],
+  qs:[["A：你哥哥长得高吗？|B：不高，他比我还___。","A: Nǐ gēge zhǎng de gāo ma? B: Bù gāo, tā bǐ wǒ hái ___.","A: Is your brother tall? B: No, he's even ___er than me.","a"],
+      ["A：我能___一下你的铅笔吗？|B：当然可以，给你。","A: Wǒ néng ___ yíxià nǐ de qiānbǐ ma? B: Dāngrán kěyǐ, gěi nǐ.","A: Can I ___ your pencil? B: Sure, here.","c"],
+      ["A：你听，那是什么？|B：我的___不太好，什么都没听见。","A: Nǐ tīng, nà shì shénme? B: Wǒ de ___ bú tài hǎo, shénme dōu méi tīngjiàn.","A: Listen, what's that? B: My ___s aren't great, I didn't hear anything.","b"],
+      ["A：电影七点开始，现在已经六点五十了！|B：别___，电影院就在前面。","A: Diànyǐng qī diǎn kāishǐ, xiànzài yǐjīng liù diǎn wǔshí le! B: Bié ___, diànyǐngyuàn jiù zài qiánmiàn.","A: The film starts at seven and it's 6:50! B: Don't ___, the cinema is just ahead.","d"],
+      ["A：你对新房子___吗？|B：还可以，就是离公司有点儿远。","A: Nǐ duì xīn fángzi ___ ma? B: Hái kěyǐ, jiùshì lí gōngsī yǒudiǎnr yuǎn.","A: Are you ___ with the new flat? B: It's OK, just a bit far from work.","e"]]},
+ {name:"五", dialog:true, opts:{a:["难过","nánguò","sad"],b:["遇到","yùdào","run into"],c:["换","huàn","exchange"],d:["清楚","qīngchu","clearly"],e:["决定","juédìng","decide"],f:["结束","jiéshù","end"]},
+  ex:["A：会议几点___？|B：十一点半。","A: Huìyì jǐ diǎn ___? B: Shíyī diǎn bàn.","A: What time does the meeting ___? B: 11:30.","f"],
+  qs:[["A：你___了吗？去不去？|B：我还在想。","A: Nǐ ___ le ma? Qù bu qù? B: Wǒ hái zài xiǎng.","A: Have you ___d? Going or not? B: Still thinking.","e"],
+      ["A：这件衬衫太小了。|B：没关系，你可以去商店___一件大的。","A: Zhè jiàn chènshān tài xiǎo le. B: Méi guānxi, nǐ kěyǐ qù shāngdiàn ___ yí jiàn dà de.","A: This shirt is too small. B: No problem, ___ it for a bigger one at the shop.","c"],
+      ["A：黑板上的字你看得___吗？|B：不行，我坐得太远了。","A: Hēibǎn shang de zì nǐ kàn de ___ ma? B: Bù xíng, wǒ zuò de tài yuǎn le.","A: Can you see the board ___? B: No, I'm sitting too far away.","d"],
+      ["A：她怎么哭了？|B：她的小猫不见了，她很___。","A: Tā zěnme kū le? B: Tā de xiǎo māo bú jiàn le, tā hěn ___.","A: Why is she crying? B: Her kitten is missing; she's very ___.","a"],
+      ["A：你在中国___过什么问题吗？|B：有，我常常听不懂别人说话。","A: Nǐ zài Zhōngguó ___ guo shénme wèntí ma? B: Yǒu, wǒ chángcháng tīng bu dǒng biérén shuōhuà.","A: Did you ___ any problems in China? B: Yes, I often couldn't understand people.","b"]]},
+ {name:"六", dialog:true, opts:{a:["讲","jiǎng","tell"],b:["年轻","niánqīng","young"],c:["放","fàng","put"],d:["经过","jīngguò","pass by"],e:["容易","róngyì","easy"],f:["愿意","yuànyì","willing"]},
+  ex:["A：你___和我一起去吗？|B：当然，我们几点走？","A: Nǐ ___ hé wǒ yìqǐ qù ma? B: Dāngrán, wǒmen jǐ diǎn zǒu?","A: Are you ___ to come with me? B: Sure, when do we leave?","f"],
+  qs:[["A：您看起来很___！|B：谢谢，其实我已经五十岁了。","A: Nín kàn qǐlai hěn ___! B: Xièxie, qíshí wǒ yǐjīng wǔshí suì le.","A: You look very ___! B: Thanks, actually I'm already fifty.","b"],
+      ["A：我的护照呢？|B：我把它___在桌子上了。","A: Wǒ de hùzhào ne? B: Wǒ bǎ tā ___ zài zhuōzi shang le.","A: Where's my passport? B: I ___ it on the table.","c"],
+      ["A：去火车站要___那个公园吗？|B：对，公园就在路边。","A: Qù huǒchēzhàn yào ___ nàge gōngyuán ma? B: Duì, gōngyuán jiù zài lù biān.","A: Do we ___ that park on the way to the station? B: Yes, it's right by the road.","d"],
+      ["A：汉字难不难？|B：开始很难，现在___多了。","A: Hànzì nán bu nán? B: Kāishǐ hěn nán, xiànzài ___ duō le.","A: Are characters hard? B: At first, but much ___er now.","e"],
+      ["A：爷爷，你再给我___一个故事吧！|B：好，就一个，听完你就睡觉。","A: Yéye, nǐ zài gěi wǒ ___ yí ge gùshi ba! B: Hǎo, jiù yí ge, tīng wán nǐ jiù shuìjiào.","A: Grandpa, ___ me one more story! B: OK, just one, then sleep.","a"]]},
+ {name:"七", tip:"j-词", opts:{a:["简单","jiǎndān","simple"],b:["解决","jiějué","solve"],c:["检查","jiǎnchá","check"],d:["结束","jiéshù","end, finish"],e:["决定","juédìng","decide"],f:["几乎","jīhū","almost"]},
+  ex:["这个问题很___，谁都会。","Zhège wèntí hěn ___, shéi dōu huì.","This question is ___; anyone can do it.","a"],
+  qs:[["交作业以前，你最好再___一遍。","Jiāo zuòyè yǐqián, nǐ zuìhǎo zài ___ yí biàn.","Before you hand in your homework, you'd better ___ it once more.","c"],
+      ["会议几点___？我晚上还有事。","Huìyì jǐ diǎn ___? Wǒ wǎnshang hái yǒu shì.","What time does the meeting ___? I have plans this evening.","d"],
+      ["这个问题太难了，我们一起想办法___吧。","Zhège wèntí tài nán le, wǒmen yìqǐ xiǎng bànfǎ ___ ba.","This problem is too hard; let's find a way to ___ it together.","b"],
+      ["去不去中国，我还没___。","Qù bu qù Zhōngguó, wǒ hái méi ___.","I haven't ___d yet whether to go to China.","e"],
+      ["他每天都去跑步，___没有一天休息。","Tā měi tiān dōu qù pǎobù, ___ méiyǒu yì tiān xiūxi.","He runs every day; he ___ never takes a day off.","f"]]},
+ {name:"八", opts:{a:["着急","zháojí","worried, in a hurry"],b:["终于","zhōngyú","finally"],c:["虽然","suīrán","although"],d:["愿意","yuànyì","willing"],e:["准备","zhǔnbèi","prepare"],f:["参加","cānjiā","take part"]},
+  ex:["___今天很冷，但是我们还是去公园了。","___ jīntiān hěn lěng, dànshì wǒmen háishi qù gōngyuán le.","___ it was cold today, we still went to the park.","c"],
+  qs:[["明天考试，你___好了吗？","Míngtiān kǎoshì, nǐ ___ hǎo le ma?","The exam is tomorrow. Are you ___d?","e"],
+      ["别___，飞机还有一个小时才起飞。","Bié ___, fēijī hái yǒu yí ge xiǎoshí cái qǐfēi.","Don't ___, the plane doesn't take off for another hour.","a"],
+      ["下个星期六有一个足球比赛，你想___吗？","Xià ge xīngqīliù yǒu yí ge zúqiú bǐsài, nǐ xiǎng ___ ma?","There's a football match next Saturday. Do you want to ___?","f"],
+      ["等了一个星期，他的信___来了。","Děng le yí ge xīngqī, tā de xìn ___ lái le.","After a week of waiting, his letter ___ arrived.","b"],
+      ["我很___帮你，可是今天没有时间。","Wǒ hěn ___ bāng nǐ, kěshì jīntiān méiyǒu shíjiān.","I'm very ___ to help you, but I have no time today.","d"]]},
+ {name:"九", dialog:true, opts:{a:["矮","ǎi","short, low"],b:["体育","tǐyù","sports, PE"],c:["机会","jīhuì","chance"],d:["告诉","gàosu","tell"],e:["放","fàng","put"],f:["搬","bān","move"]},
+  ex:["A：你的新家在哪儿？|B：我们上个月___到学校旁边了。","A: Nǐ de xīn jiā zài nǎr? B: Wǒmen shàng ge yuè ___ dào xuéxiào pángbiān le.","A: Where's your new home? B: Last month we ___d next to the school.","f"],
+  qs:[["A：这张桌子你用得怎么样？|B：有点儿___，我坐着不舒服。","A: Zhè zhāng zhuōzi nǐ yòng de zěnmeyàng? B: Yǒudiǎnr ___, wǒ zuòzhe bù shūfu.","A: How do you like this desk? B: It's a bit ___; it's uncomfortable to sit at.","a"],
+      ["A：你最喜欢什么课？|B：___课，因为可以在外面踢足球。","A: Nǐ zuì xǐhuan shénme kè? B: ___ kè, yīnwèi kěyǐ zài wàimiàn tī zúqiú.","A: What's your favourite class? B: ___, because we can play football outside.","b"],
+      ["A：下个月去北京开会，你想去吗？|B：当然，这是一个很好的学习___。","A: Xià ge yuè qù Běijīng kāihuì, nǐ xiǎng qù ma? B: Dāngrán, zhè shì yí ge hěn hǎo de xuéxí ___.","A: Do you want to go to the meeting in Beijing next month? B: Of course, it's a great ___ to learn.","c"],
+      ["A：你的生日是几月几号？|B：不___你！你自己猜吧。","A: Nǐ de shēngrì shì jǐ yuè jǐ hào? B: Bú ___ nǐ! Nǐ zìjǐ cāi ba.","A: When's your birthday? B: I won't ___ you! Guess.","d"],
+      ["A：我的手机呢？|B：我把它___在你的包里了。","A: Wǒ de shǒujī ne? B: Wǒ bǎ tā ___ zài nǐ de bāo li le.","A: Where's my phone? B: I ___ it in your bag.","e"]]},
+ {name:"十", tip:"易混", opts:{a:["合适","héshì","suitable"],b:["好像","hǎoxiàng","seem"],c:["变成","biànchéng","turn into"],d:["以为","yǐwéi","thought (wrongly)"],e:["差不多","chàbuduō","about the same"],f:["请客","qǐngkè","treat (pay)"]},
+  ex:["这双鞋大小正好，你穿很___。","Zhè shuāng xié dàxiǎo zhènghǎo, nǐ chuān hěn ___.","These shoes are just the right size; they're very ___ on you.","a"],
+  qs:[["我___你不来了，所以先吃饭了。","Wǒ ___ nǐ bù lái le, suǒyǐ xiān chī fàn le.","I ___ you weren't coming, so I ate first.","d"],
+      ["天太冷了，河里的水都___冰了。","Tiān tài lěng le, hé li de shuǐ dōu ___ bīng le.","It's so cold that the water in the river has ___ ice.","c"],
+      ["他今天一句话也没说，___不太高兴。","Tā jīntiān yí jù huà yě méi shuō, ___ bú tài gāoxìng.","He hasn't said a word today; he ___ unhappy.","b"],
+      ["我们两个人的个子___，都是一米八。","Wǒmen liǎng ge rén de gèzi ___, dōu shì yì mǐ bā.","We're ___ the same height, both 1.80 m.","e"],
+      ["今天是我的生日，晚饭我___！","Jīntiān shì wǒ de shēngrì, wǎnfàn wǒ ___!","It's my birthday today; dinner is my ___!","f"]]},
+ {name:"十一", tip:"新词", dialog:true, opts:{a:["只要","zhǐyào","as long as"],b:["有关","yǒuguān","related to"],c:["得到","dédào","get, obtain"],d:["以外","yǐwài","besides"],e:["坚持","jiānchí","keep at it"],f:["快要","kuàiyào","about to"]},
+  ex:["A：我能学好中文吗？|B：能，___每天练习，就一定能学好。","A: Wǒ néng xué hǎo Zhōngwén ma? B: Néng, ___ měi tiān liànxí, jiù yídìng néng xué hǎo.","A: Can I learn Chinese well? B: Yes, ___ you practise every day, you will.","a"],
+  qs:[["A：你今天怎么这么高兴？|B：我___了一个去中国学习的机会！","A: Nǐ jīntiān zěnme zhème gāoxìng? B: Wǒ ___ le yí ge qù Zhōngguó xuéxí de jīhuì!","A: Why are you so happy today? B: I ___ a chance to study in China!","c"],
+      ["A：除了中文___，你还会说什么？|B：英语和德语。","A: Chúle Zhōngwén ___, nǐ hái huì shuō shénme? B: Yīngyǔ hé Déyǔ.","A: ___ Chinese, what else do you speak? B: English and German.","d"],
+      ["A：你每天都跑步吗？|B：对，我已经___三年了。","A: Nǐ měi tiān dōu pǎobù ma? B: Duì, wǒ yǐjīng ___ sān nián le.","A: Do you run every day? B: Yes, I've ___ it up for three years.","e"],
+      ["A：你知道他为什么生气吗？|B：我觉得跟昨天的考试___。","A: Nǐ zhīdào tā wèishénme shēngqì ma? B: Wǒ juéde gēn zuótiān de kǎoshì ___.","A: Do you know why he's angry? B: I think it's ___ yesterday's exam.","b"],
+      ["A：快点儿！电影___开始了！|B：来了，来了！","A: Kuài diǎnr! Diànyǐng ___ kāishǐ le! B: Lái le, lái le!","A: Hurry up! The film is ___ start! B: Coming, coming!","f"]]},
+ {name:"十二", opts:{a:["环境","huánjìng","environment"],b:["照顾","zhàogù","look after"],c:["如果","rúguǒ","if"],d:["安静","ānjìng","quiet"],e:["季节","jìjié","season"],f:["请假","qǐngjià","ask for leave"]},
+  ex:["我生病了，明天想___一天。","Wǒ shēngbìng le, míngtiān xiǎng ___ yì tiān.","I'm ill and want to ___ for a day tomorrow.","f"],
+  qs:[["这个公园的___很好，有很多树和花。","Zhège gōngyuán de ___ hěn hǎo, yǒu hěn duō shù hé huā.","The ___ in this park is lovely, with lots of trees and flowers.","a"],
+      ["___明天不下雨，我们就去骑自行车。","___ míngtiān bú xià yǔ, wǒmen jiù qù qí zìxíngchē.","___ it doesn't rain tomorrow, we'll go cycling.","c"],
+      ["图书馆里很___，大家都在看书。","Túshūguǎn li hěn ___, dàjiā dōu zài kàn shū.","It's very ___ in the library; everyone is reading.","d"],
+      ["春夏秋冬，你最喜欢哪个___？","Chūn xià qiū dōng, nǐ zuì xǐhuan nǎge ___?","Spring, summer, autumn, winter: which ___ do you like best?","e"],
+      ["妈妈生病了，我得回家___她。","Māma shēngbìng le, wǒ děi huí jiā ___ tā.","Mum is ill; I have to go home and ___ her.","b"]]},
+ {name:"十三", tip:"假 · 易混", opts:{a:["请假","qǐngjià","ask for leave"],b:["休假","xiūjià","be on leave"],c:["放假","fàngjià","have a holiday (school, company)"],d:["假期","jiàqī","holidays (noun)"],e:["一块儿","yíkuàir","together"],f:["以为","yǐwéi","thought (wrongly)"]},
+  ex:["我发烧了，得给经理打电话___。","Wǒ fāshāo le, děi gěi jīnglǐ dǎ diànhuà ___.","I have a fever; I have to call the manager to ___.","a"],
+  qs:[["学校下个星期___，孩子们都很高兴。","Xuéxiào xià ge xīngqī ___, háizimen dōu hěn gāoxìng.","School ___ next week, so the kids are happy.","c"],
+      ["这个___你打算去哪儿旅游？","Zhège ___ nǐ dǎsuàn qù nǎr lǚyóu?","Where are you travelling these ___?","d"],
+      ["王经理这个星期在___，下星期一才回来上班。","Wáng jīnglǐ zhège xīngqī zài ___, xià xīngqīyī cái huílai shàngbān.","Manager Wang is ___ this week and back at work next Monday.","b"],
+      ["我们___去吃饭吧，我请客。","Wǒmen ___ qù chī fàn ba, wǒ qǐngkè.","Let's go and eat ___; it's my treat.","e"],
+      ["我___你已经回国了，没想到你还在这儿！","Wǒ ___ nǐ yǐjīng huí guó le, méi xiǎngdào nǐ hái zài zhèr!","I ___ you'd gone home; I didn't expect you to still be here!","f"]]},
+ {name:"十四", tip:"易混", opts:{a:["合适","héshì","suitable (adjective)"],b:["适合","shìhé","to suit (verb)"],c:["常见","chángjiàn","common, often seen"],d:["常用","chángyòng","often used"],e:["好像","hǎoxiàng","seem"],f:["像","xiàng","look like"]},
+  ex:["这件衣服很___你，你穿上真漂亮。","Zhè jiàn yīfu hěn ___ nǐ, nǐ chuān shang zhēn piàoliang.","This dress really ___s you; you look lovely in it.","b"],
+  qs:[["这双鞋太小了，不太___。","Zhè shuāng xié tài xiǎo le, bú tài ___.","These shoes are too small, not very ___.","a"],
+      ["感冒是冬天最___的病。","Gǎnmào shì dōngtiān zuì ___ de bìng.","A cold is the most ___ illness in winter.","c"],
+      ["这本词典我每天都用，是我最___的书。","Zhè běn cídiǎn wǒ měi tiān dōu yòng, shì wǒ zuì ___ de shū.","I use this dictionary every day; it's my most ___ book.","d"],
+      ["他今天一句话也没说，___不太高兴。","Tā jīntiān yí jù huà yě méi shuō, ___ bú tài gāoxìng.","He hasn't said a word today; he ___ unhappy.","e"],
+      ["你长得真___你爸爸！","Nǐ zhǎng de zhēn ___ nǐ bàba!","You really ___ your dad!","f"]]}
+];
+
+const LET = ["A","B","C","D","E","F"];
+const TARGET = 290; // seconds per set of 6 at exam pace (~48 s per question)
+[...P1,...P2].forEach(s=>{ s.qs=[s.ex,...s.qs]; });
+const $ = s => document.querySelector(s);
+const store = {
+  get(){ try { return JSON.parse(localStorage.getItem("hsk3read") || "{}"); } catch(e){ return {}; } },
+  set(v){ try { localStorage.setItem("hsk3read", JSON.stringify(v)); } catch(e){} }
+};
+let db = null, lastRef = null;
+let dbBest = {};
+(async()=>{ try { db = window.claude && await window.claude.use("db"); } catch(e){ db = null; }
+  if(db){ try { const snap = await db.collection("attempts").get();
+    snap.docs.forEach(s=>{ const r=s.data(); if(!r) return; const k=r.part+"-"+(r.set-1); const p=dbBest[k];
+      if(!p || r.score>p.s || (r.score===p.s && r.seconds<p.t)) dbBest[k]={t:r.seconds,s:r.score,n:r.n||5}; });
+    renderSets(); } catch(e){} } })();
+let part = "p1", setIdx = 0, letters = {}, answers = [], started = 0, elapsed = 0, timer = null, done = false, peeks = 0;
+
+function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+function fmt(s){ s=Math.round(s); return Math.floor(s/60)+":"+String(s%60).padStart(2,"0"); }
+function data(){ return (part==="p1"?P1:P2)[setIdx]; }
+function paceTag(sec){ if(sec<=TARGET) return ["good","exam pace"]; if(sec<=TARGET*1.75) return ["mid","getting there"]; return ["slow","keep going"]; }
+
+function renderSets(){
+  const local = store.get(); const best = {...local};
+  for(const k in dbBest){ const a=dbBest[k], b=best[k]; if(!b || a.s>b.s || (a.s===b.s && a.t<b.t)) best[k]=a; }
+  const arr = part==="p1"?P1:P2;
+  $("#sets").innerHTML = arr.map((s,i)=>{
+    const b = best[part+"-"+i];
+    const info = b ? fmt(b.t)+" · "+b.s+"/"+(b.n||6) : "not done";
+    return `<button class="chip" aria-pressed="${i===setIdx}" data-i="${i}"><b>第${s.name}组${s.tip?" · "+s.tip:""}</b><span>${info}</span></button>`;
+  }).join("");
+  document.querySelectorAll(".chip").forEach(c=>c.onclick=()=>{ setIdx=+c.dataset.i; load(); });
+}
+
+function blankHTML(text, fill){
+  const parts = text.split("|").map(line => line.replace("___", `<span class="blank">${fill||"&nbsp;"}</span>`));
+  return parts.map(p=>`<span class="line">${p}</span>`).join("");
+}
+
+function load(){
+  clearInterval(timer); timer=null; started=0; elapsed=0; done=false; peeks=0;
+  const d = data();
+  const keys = Object.keys(d.opts);
+  const order = shuffle(keys.slice());
+  letters = {}; order.forEach((k,i)=>letters[k]=LET[i]);
+  answers = d.qs.map(()=>null);
+  $("#clock").textContent="0:00";
+  $("#pace").textContent="Press Start: the timer runs from the moment the questions appear.";
+  $("#check").disabled = true;
+  veil(true);
+  $("#result").hidden = true;
+  renderSets(); renderOpts(); renderQs();
+}
+
+function renderOpts(){
+  const d = data(); const words = part==="p2";
+  const byLetter = Object.keys(d.opts).sort((a,b)=>letters[a].localeCompare(letters[b]));
+  const used = new Set(answers.filter(Boolean));
+  $("#optSheet").innerHTML = `<h2><span>${words?"选词":"选项"} · A–F</span><button class="peek" id="optPeek">${done?"":"show pinyin"}</button></h2>
+    <div class="opts ${words?"words":""}">${byLetter.map(k=>{
+      const o=d.opts[k];
+      return `<div class="opt ${used.has(k)?"used":""}"><span class="k">${letters[k]}</span><span class="t">${o[0]}<span class="sub" data-sub hidden>${o[1]}${words?" · "+o[2]:" · "+o[2]}</span></span></div>`;
+    }).join("")}</div>`;
+  const pk = $("#optPeek");
+  if(done){ document.querySelectorAll("[data-sub]").forEach(e=>e.hidden=false); }
+  if(pk) pk.onclick=()=>{ peeks++; document.querySelectorAll("[data-sub]").forEach(e=>e.hidden=!e.hidden); };
+}
+
+function renderQs(){
+  const d = data(); const p2 = part==="p2";
+  const byLetter = Object.keys(d.opts).sort((a,b)=>letters[a].localeCompare(letters[b]));
+  const exText = p2 ? blankHTML(d.ex[0], letters[d.ex[3]]) : d.ex[0];
+  let html = `<h2><span>${p2?"第二部分 · 选词填空":"第一部分 · 找出对应的句子"}</span><span>one option is extra</span></h2>`;
+  d.qs.forEach((q,i)=>{
+    const chosen = answers[i];
+    const fillLetter = p2 ? (chosen ? letters[chosen] : "") : "";
+    const qText = p2 ? blankHTML(q[0], done ? d.opts[q[3]][0] : fillLetter) : q[0];
+    const bubbles = byLetter.map(k=>{
+      let cls=""; if(done){ if(k===q[3]&&chosen===k) cls="right"; else if(chosen===k) cls="wrong"; else if(k===q[3]) cls="should"; }
+      return `<button class="bubble ${cls}" aria-pressed="${chosen===k}" data-q="${i}" data-k="${k}" ${done?"disabled":""} aria-label="Question ${i+1}, option ${letters[k]}">${letters[k]}</button>`;
+    }).join("");
+    const py = p2 && done ? q[1].replace("___", d.opts[q[3]][1]) : q[1];
+    const en = p2 && done ? q[2].replace("___", d.opts[q[3]][2]) : q[2];
+    html += `<div class="q"><div class="num">${i+1}</div><div class="qt">${qText}</div>
+      <div class="bubbles">${bubbles}<button class="peek" data-peek="${i}">${done?"":"pinyin"}</button></div>
+      <div class="gloss" data-gloss="${i}" ${done?"":"hidden"}><span class="py">${py}</span><br>${en}${!p2&&done?`<br><span class="py">→ ${d.opts[q[3]][1]}</span> ${d.opts[q[3]][2]}`:""}</div></div>`;
+  });
+  $("#qSheet").innerHTML = html;
+  document.querySelectorAll(".bubble").forEach(b=>b.onclick=()=>pick(+b.dataset.q,b.dataset.k));
+  document.querySelectorAll("[data-peek]").forEach(b=>b.onclick=()=>{ if(done) return; peeks++; const g=document.querySelector(`[data-gloss="${b.dataset.peek}"]`); g.hidden=!g.hidden; });
+}
+
+function tick(){ elapsed=(Date.now()-started)/1000; $("#clock").textContent=fmt(elapsed);
+  const [c,l]=paceTag(elapsed); $("#pace").innerHTML=`Exam pace: about 5:00 per set <span class="tag ${c}">${l}</span>`; }
+
+function veil(on){
+  const w = $("#veilWrap");
+  if(!w){ const v=document.createElement("div"); v.id="veilWrap"; v.className="veil"; $("#optSheet").before(v); v.append($("#optSheet"),$("#qSheet"));
+    const c=document.createElement("div"); c.className="startcover"; c.innerHTML='<button class="btn" id="coverStart">开始 · Start</button><span class="note">Reading the options counts. The clock starts now.</span>'; v.prepend(c);
+    c.querySelector("#coverStart").onclick=startTimer; }
+  $("#veilWrap").classList.toggle("on", on); $("#veilWrap").style.display="flex"; $("#veilWrap").style.flexDirection="column"; $("#veilWrap").style.gap="16px";
+  $("#startBtn").hidden = !on;
+}
+function startTimer(){ if(started||done) return; started=Date.now(); timer=setInterval(tick,250); tick(); veil(false); }
+$("#startBtn").onclick=startTimer;
+function pick(i,k){
+  if(done) return;
+  if(!started){ startTimer(); }
+  // one option per question; taking an option already used elsewhere moves it here
+  answers = answers.map((a,j)=> j!==i && a===k ? null : a);
+  answers[i] = answers[i]===k ? null : k;
+  $("#check").disabled = answers.some(a=>!a);
+  renderOpts(); renderQs();
+}
+
+function check(){
+  if(done || answers.some(a=>!a)) return;
+  clearInterval(timer); if(started) elapsed=(Date.now()-started)/1000; done=true;
+  const d=data(); const score=d.qs.filter((q,i)=>answers[i]===q[3]).length;
+  const best=store.get(); const key=part+"-"+setIdx; const prev=best[key];
+  if(!prev || score>prev.s || (score===prev.s && elapsed<prev.t)) { best[key]={t:Math.round(elapsed),s:score,n:d.qs.length}; store.set(best); }
+  const [c,l]=paceTag(elapsed);
+  const per=Math.round(elapsed/d.qs.length);
+  const cascade = d.qs.filter((q,i)=>answers[i]!==q[3] && d.qs.some((q2,j)=>j!==i && q2[3]===answers[i])).length;
+  $("#result").hidden=false;
+  $("#result").innerHTML = `<div class="big">${score}/${d.qs.length} · ${fmt(elapsed)} <span class="tag ${c}" style="font-family:var(--ui);font-size:13px;padding:2px 10px;border-radius:999px">${l}</span></div>
+    <div>${per} s per question. Exam pace is about 48 s. Your 18 Oct baseline was about 240 s.</div>
+    ${cascade?`<div>${cascade} wrong answer${cascade>1?"s were":" was"} the right answer for another question: a chain reaction. Next time, do the sure ones first.</div>`:""}
+    ${peeks?`<div class="note">Peeked at pinyin ${peeks}×. Try the next run without.</div>`:""}
+    <div class="note">Press 重来 to run the same set again with the letters shuffled. Repeating a set until it's under 5:00 is the point.</div>
+    <label for="fb" style="font-weight:600;margin-top:6px">What slowed you down? (optional, Claude reads this)</label>
+    <textarea id="fb" rows="2" style="font:inherit;padding:8px;border:1px solid var(--rule);border-radius:8px;background:var(--paper);color:var(--ink);width:100%"></textarea>
+    <div style="display:flex;gap:10px;align-items:center"><button class="btn ghost" id="fbSave">Save note</button><span class="note" id="saved">${db?"Saving result…":"Result kept in this browser only."}</span></div>`;
+  renderSets(); renderOpts(); renderQs();
+  const rec = {part, set:setIdx+1, n:d.qs.length, score, seconds:Math.round(elapsed), peeks, cascade, at:new Date().toISOString(),
+    items:d.qs.map((q,i)=>({q:q[0].replace('|',' '), chosen:d.opts[answers[i]][0], correct:d.opts[q[3]][0], ok:answers[i]===q[3]}))};
+  lastRef = null;
+  if(db){ db.collection("attempts").add(rec).then(r=>{ lastRef=r; const k=part+"-"+(rec.set-1), p=dbBest[k]; if(!p || rec.score>p.s || (rec.score===p.s && rec.seconds<p.t)) dbBest[k]={t:rec.seconds,s:rec.score,n:rec.n}; renderSets(); $("#saved").textContent="Saved for analysis."; }).catch(()=>{ $("#saved").textContent="Couldn't save to the shared log; kept in this browser."; }); }
+  $("#fbSave").onclick=()=>{ const t=$("#fb").value.trim(); if(!t) return; if(lastRef){ lastRef.update({note:t}).then(()=>$("#saved").textContent="Note saved.").catch(()=>$("#saved").textContent="Couldn't save the note."); } else { $("#saved").textContent="Not connected; tell Claude in the chat instead."; } };
+}
+
+/* ---------- 书写: sentence ordering (W1) and pinyin → character (W2) ---------- */
+const W1 = [
+ {name:"一", tip:"假 · 易混", items:[
+  {t:["学校","下个星期","就要","放假","了"], a:["学校下个星期就要放假了","下个星期学校就要放假了"], end:"。", py:"Xuéxiào xià ge xīngqī jiù yào fàngjià le.", en:"School breaks up next week."},
+  {t:["我","明天","想","请","一天假"], a:["我明天想请一天假","明天我想请一天假"], end:"。", py:"Wǒ míngtiān xiǎng qǐng yì tiān jià.", en:"I'd like to take a day off tomorrow."},
+  {t:["这个假期","你","打算","做什么"], a:["这个假期你打算做什么","你这个假期打算做什么"], end:"？", py:"Zhège jiàqī nǐ dǎsuàn zuò shénme?", en:"What are you planning to do these holidays?"},
+  {t:["经理","这个星期","在","休假"], a:["经理这个星期在休假","这个星期经理在休假"], end:"。", py:"Jīnglǐ zhège xīngqī zài xiūjià.", en:"The manager is on leave this week."},
+  {t:["我","以为","你","不来了"], a:["我以为你不来了"], end:"。", py:"Wǒ yǐwéi nǐ bù lái le.", en:"I thought you weren't coming."}]},
+ {name:"二", tip:"老问题", items:[
+  {t:["他","比","我弟弟","矮","一点儿"], a:["他比我弟弟矮一点儿"], end:"。", py:"Tā bǐ wǒ dìdi ǎi yìdiǎnr.", en:"He's a bit shorter than my little brother."},
+  {t:["这个问题","已经","被","解决","了"], a:["这个问题已经被解决了"], end:"。", py:"Zhège wèntí yǐjīng bèi jiějué le.", en:"This problem has already been solved."},
+  {t:["请","再","检查","一下","你的作业"], a:["请再检查一下你的作业"], end:"。", py:"Qǐng zài jiǎnchá yíxià nǐ de zuòyè.", en:"Please check your homework once more."},
+  {t:["我","想","去银行","换","一点儿钱"], a:["我想去银行换一点儿钱"], end:"。", py:"Wǒ xiǎng qù yínháng huàn yìdiǎnr qián.", en:"I want to go to the bank to change some money."},
+  {t:["我们","一块儿","去","吃饭","吧"], a:["我们一块儿去吃饭吧"], end:"。", py:"Wǒmen yíkuàir qù chī fàn ba.", en:"Let's go and eat together."}]}
+];
+const W2 = [
+ {name:"一", tip:"老问题", items:[
+  ["我哥哥比我（ǎi）。","矮","Wǒ gēge bǐ wǒ ǎi.","My brother is shorter than me.","矢 arrow + 委 wěi (sound): an arrow is short."],
+  ["这件衣服太大了，我想去（huàn）一件。","换","Zhè jiàn yīfu tài dà le, wǒ xiǎng qù huàn yí jiàn.","It's too big; I want to exchange it.","扌 hand + 奂 huàn (same sound): from hand to hand."],
+  ["爷爷每天早上都看（bào）纸。","报","Yéye měi tiān zǎoshang dōu kàn bàozhǐ.","Grandpa reads the paper every morning.","扌 hand + 卩 + 又: a report, as in 报名."],
+  ["报（zhǐ）上有很多新闻。","纸","Bàozhǐ shang yǒu hěn duō xīnwén.","There's a lot of news in the paper.","纟 fibre + 氏 shì (sound): paper is made of fibres."],
+  ["考试以前，请再（jiǎn）查一下。","检","Kǎoshì yǐqián, qǐng zài jiǎnchá yíxià.","Check it again before the exam.","木 wood + 佥 qiān (sound). 检 and 查 both have 木."]]},
+ {name:"二", tip:"老问题", items:[
+  ["我（chá）了一下词典。","查","Wǒ chá le yíxià cídiǎn.","I looked it up in the dictionary.","木 wood on top of 旦 dawn. Not 茶 (tea)."],
+  ["这个问题很难（jiě）决。","解","Zhège wèntí hěn nán jiějué.","This problem is hard to solve.","角 horn + 刀 knife + 牛 ox: cutting the problem apart."],
+  ["你（jué）定了吗？","决","Nǐ juédìng le ma?","Have you decided?","冫 ice + 夬. Same 夬 as in 块 (一块儿)."],
+  ["这个题很（jiǎn）单。","简","Zhège tí hěn jiǎndān.","This question is simple.","⺮ bamboo + 间 jiān (sound). Not 检 (wood)."],
+  ["会议几点（jié）束？","结","Huìyì jǐ diǎn jiéshù?","When does the meeting end?","纟 thread + 吉 jí (sound): tie the knot, finish."]]},
+ {name:"三", tip:"假", items:[
+  ["我生病了，想请一天（jià）。","假","Wǒ shēngbìng le, xiǎng qǐng yì tiān jià.","I'm ill and want a day off.","亻 person + 叚 (sound). Read jià for holiday, jiǎ for false."],
+  ["王经理下个星期（xiū）假。","休","Wáng jīnglǐ xià ge xīngqī xiūjià.","Manager Wang is on leave next week.","亻 a person leaning against a tree 木: resting."],
+  ["这个假（qī）你去哪儿？","期","Zhège jiàqī nǐ qù nǎr?","Where are you going these holidays?","其 qí (sound) + 月 moon: a period of time, as in 星期, 学期."],
+  ["我们一（kuài）儿去吧。","块","Wǒmen yíkuàir qù ba.","Let's go together.","土 earth + 夬 (sound): a lump; 一块儿 = in one lump, together."],
+  ["他好（xiàng）不太高兴。","像","Tā hǎoxiàng bú tài gāoxìng.","He seems unhappy.","亻 person + 象 xiàng (same sound, elephant)."]]},
+ {name:"四", tip:"新词", items:[
+  ["这双鞋很合（shì）。","适","Zhè shuāng xié hěn héshì.","These shoes fit well.","辶 walking + 舌 shé (sound)."],
+  ["感冒是冬天（cháng）见的病。","常","Gǎnmào shì dōngtiān chángjiàn de bìng.","A cold is a common winter illness.","尚 shàng (sound) + 巾 cloth."],
+  ["学中文要（jiān）持。","坚","Xué Zhōngwén yào jiānchí.","Learning Chinese takes perseverance.","土 earth at the bottom: firm."],
+  ["这件事跟你有（guān）。","关","Zhè jiàn shì gēn nǐ yǒuguān.","This has to do with you.","丷 on top of 天. Also in 关系, 没关系."],
+  ["除了中文以（wài），我还学英语。","外","Chúle Zhōngwén yǐwài, wǒ hái xué Yīngyǔ.","Besides Chinese, I also study English.","夕 evening + 卜 divination; also in 外国, 外面."]]}
+];
+let wpart = "w1", widx = 0, wstate = null;
+function wBest(){ try { return JSON.parse(localStorage.getItem("hsk3write") || "{}"); } catch(e){ return {}; } }
+function wSaveBest(k,v){ try { const b=wBest(); b[k]=v; localStorage.setItem("hsk3write", JSON.stringify(b)); } catch(e){} }
+function wRenderSets(){
+  const arr = wpart==="w1"?W1:W2, best=wBest();
+  $("#wsets").innerHTML = arr.map((s,i)=>{ const b=best[wpart+"-"+i]; return `<button class="chip" aria-pressed="${i===widx}" data-wi="${i}"><b>第${s.name}组${s.tip?" · "+s.tip:""}</b><span>${b?b.s+"/"+b.n:"not done"}</span></button>`; }).join("");
+  document.querySelectorAll("[data-wi]").forEach(c=>c.onclick=()=>{ widx=+c.dataset.wi; wLoad(); });
+}
+function wLoad(){
+  const set=(wpart==="w1"?W1:W2)[widx];
+  wstate = {i:0, results:[], start:Date.now(), picked:[], order:null, shown:false};
+  wRenderSets(); wRender();
+}
+function wRender(){
+  const set=(wpart==="w1"?W1:W2)[widx], st=wstate, n=set.items.length;
+  if(st.i>=n) return wFinish(set);
+  const head = `<h2><span>${wpart==="w1"?"书写 第一部分 · 完成句子":"书写 第二部分 · 看拼音写汉字"}</span><span>${st.i+1} / ${n}</span></h2>`;
+  if(wpart==="w1"){
+    const it=set.items[st.i];
+    if(!st.order) st.order = shuffle(it.t.map((_,k)=>k));
+    const pool = st.order.filter(k=>!st.picked.includes(k)).map(k=>`<button class="tile" data-k="${k}">${it.t[k]}</button>`).join("");
+    const built = st.picked.map(k=>`<button class="tile on" data-k="${k}">${it.t[k]}</button>`).join("");
+    let fb="";
+    if(st.shown){ const ok=st.ok; fb=`<div class="wfb ${ok?"good":"bad"}">${ok?"对了！":"正确：<b>"+it.a[0]+it.end+"</b>"}<br><span class="py">${it.py}</span><br>${it.en}</div>`; }
+    $("#wSheet").innerHTML = head + `<p class="note">Tap the pieces in the right order. Tap a placed piece to take it back.</p>
+      <div class="built">${built||'<span class="note">…</span>'}<span class="endp">${it.end}</span></div>
+      <div class="pool">${pool}</div>${fb}
+      <div style="display:flex;gap:10px">${st.shown?'<button class="btn" id="wNext">下一题 →</button>':'<button class="btn" id="wCheck" '+(st.picked.length===it.t.length?"":"disabled")+'>检查</button><button class="btn ghost" id="wClear">清空</button>'}</div>`;
+    if(!st.shown){
+      document.querySelectorAll(".pool .tile").forEach(b=>b.onclick=()=>{ st.picked.push(+b.dataset.k); wRender(); });
+      document.querySelectorAll(".built .tile").forEach(b=>b.onclick=()=>{ st.picked=st.picked.filter(k=>k!==+b.dataset.k); wRender(); });
+      $("#wCheck").onclick=()=>{ const s=st.picked.map(k=>it.t[k]).join(""); st.ok=it.a.includes(s); st.results.push({q:it.a[0]+it.end, given:s+it.end, ok:st.ok}); st.shown=true; wRender(); };
+      $("#wClear").onclick=()=>{ st.picked=[]; wRender(); };
+    } else $("#wNext").onclick=()=>{ st.i++; st.picked=[]; st.order=null; st.shown=false; wRender(); };
+  } else {
+    const it=set.items[st.i];
+    const q = it[0].replace(/（(.*?)）/, '<span class="pyblank">（$1）</span>');
+    let body = `<div class="qt" style="font-size:24px">${q}</div>`;
+    if(!st.shown){
+      body += `<p class="note">Write the character on paper, as in the exam. Then check.</p><div><button class="btn" id="wShow">看答案</button></div>`;
+    } else {
+      body += `<div class="bigchar">${it[1]}</div><div class="wfb"><span class="py">${it[2]}</span><br>${it[3]}<br><span class="note">${it[4]}</span></div>
+        <div style="display:flex;gap:10px"><button class="btn" id="wRight">写对了 ✓</button><button class="btn ghost" id="wWrong">写错了 ✗</button></div>`;
+    }
+    $("#wSheet").innerHTML = head + body;
+    if(!st.shown) $("#wShow").onclick=()=>{ st.shown=true; wRender(); };
+    else { const go=ok=>{ st.results.push({q:it[0], correct:it[1], ok}); st.i++; st.shown=false; wRender(); };
+      $("#wRight").onclick=()=>go(true); $("#wWrong").onclick=()=>go(false); }
+  }
+}
+function wFinish(set){
+  const st=wstate, score=st.results.filter(r=>r.ok).length, n=set.items.length, sec=Math.round((Date.now()-st.start)/1000);
+  const best=wBest()[wpart+"-"+widx]; if(!best || score>best.s) wSaveBest(wpart+"-"+widx,{s:score,n});
+  const miss = st.results.filter(r=>!r.ok).map(r=>`<li>${r.correct?r.q.replace(/（.*?）/,"<b>"+r.correct+"</b>"):r.q+(r.given?` <span class="note">(you: ${r.given})</span>`:"")}</li>`).join("");
+  $("#wSheet").innerHTML = `<h2><span>结果</span><span>${fmt(sec)}</span></h2><div class="big" style="font-family:var(--mono);font-size:22px;font-weight:600">${score}/${n}</div>
+    ${miss?`<p>To look at again:</p><ul>${miss}</ul>`:"<p>全对！</p>"}
+    <div style="display:flex;gap:10px"><button class="btn" id="wAgain">重来</button></div><span class="note" id="wSaved">${db?"Saving…":"Kept in this browser."}</span>`;
+  $("#wAgain").onclick=wLoad; wRenderSets();
+  if(db){ db.collection("attempts").add({part:wpart, set:widx+1, n, score, seconds:sec, at:new Date().toISOString(), items:st.results})
+    .then(()=>$("#wSaved").textContent="Saved for analysis.").catch(()=>$("#wSaved").textContent="Couldn't save; kept in this browser."); }
+}
+
+function showTab(t){
+  ["p1","p2","w1","w2","m"].forEach(x=>$("#tab-"+x).setAttribute("aria-selected", x===t));
+  const isW = t==="w1"||t==="w2";
+  $("#drill").hidden = t==="m"||isW; $("#method").hidden = t!=="m"; $("#writing").hidden = !isW;
+  if(isW){ if(wpart!==t || !wstate){ wpart=t; widx=0; wLoad(); } }
+  else if(t!=="m"){ if(part!==t){ part=t; setIdx=0; load(); } }
+  try{ localStorage.setItem("hsk3read-tab", t); }catch(e){}
+}
+$("#tab-w1").onclick=()=>showTab("w1");
+$("#tab-w2").onclick=()=>showTab("w2");
+$("#tab-p1").onclick=()=>showTab("p1");
+$("#tab-p2").onclick=()=>showTab("p2");
+$("#tab-m").onclick=()=>showTab("m");
+$("#restart").onclick=load;
+$("#check").onclick=check;
+load();
+try{ const t=localStorage.getItem("hsk3read-tab"); if(t && t!=="p1") showTab(t); }catch(e){}
+</script>
+
+</body></html>
