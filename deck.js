@@ -44,7 +44,7 @@ function initWriters(root){
   root.querySelectorAll('.hw:not([data-done])').forEach(el=>{
     el.dataset.done='1';
     const size=parseInt(el.style.width)||180;
-    try{ HanziWriter.create(el, el.dataset.char, {width:size,height:size,padding:6,strokeColor:'#1A1D2B',radicalColor:'#B8322A',showOutline:true,strokeAnimationSpeed:1,delayBetweenStrokes:250}).loopCharacterAnimation(); }catch(e){}
+    try{ HanziWriter.create(el, el.dataset.char, {width:size,height:size,padding:6,charDataLoader:(c,ok,fail)=>fetch('vendor/hanzi-writer-data/'+encodeURIComponent(c)+'.json').then(r=>r.json()).then(ok,fail),strokeColor:'#1A1D2B',radicalColor:'#B8322A',showOutline:true,strokeAnimationSpeed:1,delayBetweenStrokes:250}).loopCharacterAnimation(); }catch(e){}
   });
 }
 window.initWritersAll=()=>{ initWriters(deck); initWriters(show); };

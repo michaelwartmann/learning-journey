@@ -3,10 +3,16 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#B8322A">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="icons/favicon-64.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="一步一步">
 <title>一步一步 · Step by Step — a Mandarin learning journey</title>
 <meta name="description" content="One learner's road to HSK, told in eight slides with notes in Chinese, pinyin and English. Free tools and resources.">
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;700&family=Noto+Serif:wght@500;700;900&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@500;700;900&family=Ma+Shan+Zheng&family=Source+Serif+4:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="fonts/fonts.css">
 <link rel="stylesheet" href="deck.css">
 </head>
 <body>
@@ -48,7 +54,8 @@
   <p>A personal, non-commercial learning journal. Illustrations made with an AI image model. Not affiliated with any exam body.</p>
   <p><a href="resources.html">Resources</a> ·</p>
 </footer>
-<script async src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.7.3/dist/hanzi-writer.min.js" onload="window.initWritersAll&&initWritersAll()"></script>
+<script async src="vendor/hanzi-writer.min.js" onload="window.initWritersAll&&initWritersAll()"></script>
 <script src="deck.js"></script>
+<script>if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js",{scope:"."}).catch(()=>{})</script>
 </body>
 </html>
