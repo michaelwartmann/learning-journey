@@ -1,0 +1,22 @@
+[
+  {"id":"p2-01","scene":"👨‍💼 📰","kw":"报纸","m":"这个男人正在看报纸。","en":"This man is reading a newspaper.","prompt":"a man in his thirties in a dark suit standing and reading a large open newspaper, calm focused face"},
+  {"id":"p2-02","scene":"👦 😭","kw":"哭","m":"这个孩子在哭，他很难过。","en":"This child is crying; he's very sad.","prompt":"a boy about seven years old in a blue sweater crying, rubbing his eyes with both hands"},
+  {"id":"p2-03","scene":"🤕","kw":"头疼","m":"他头疼，身体不太舒服。","en":"He has a headache and doesn't feel well.","prompt":"a young man holding his forehead with one hand, eyes half closed, clearly suffering from a headache"},
+  {"id":"p2-04","scene":"👩 📱 😊","kw":"打电话","m":"她在给朋友打电话，看起来很高兴。","en":"She's phoning a friend and looks happy.","prompt":"a young woman talking on a mobile phone held to her ear, laughing happily"},
+  {"id":"p2-05","scene":"🌳 🚴‍♂️ ☀️","kw":"骑","m":"今天天气很好，一个男人在公园里骑自行车。","en":"The weather is nice; a man is riding a bike in the park.","prompt":"a man riding a bicycle on a path in a green park on a sunny day, side view"},
+  {"id":"p2-06","scene":"🧳 🚄 👫","kw":"高铁","m":"他们在火车站，准备坐高铁去旅游。","en":"They're at the station, about to take the high-speed train on a trip.","prompt":"a young couple with a suitcase and backpacks standing on a railway platform next to a white high-speed train, excited"},
+  {"id":"p2-07","scene":"🥢 🍜 😋","kw":"面条","m":"她在饭馆里吃面条，面条很好吃。","en":"She's eating noodles in a restaurant; they taste good.","prompt":"a woman eating a big bowl of noodles with chopsticks at a small restaurant table, enjoying it"},
+  {"id":"p2-08","scene":"📚 👩‍🎓 ✍️","kw":"认真","m":"这个学生正在认真地学习。","en":"This student is studying hard.","prompt":"a female high-school student sitting at a desk with books, writing notes, very concentrated"},
+  {"id":"p2-09","scene":"🏸","kw":"比赛","m":"两个人正在打羽毛球比赛。","en":"Two people are playing a badminton match.","prompt":"two young men playing badminton in a sports hall, one jumping to hit the shuttlecock"},
+  {"id":"p2-10","scene":"👩 😠 👨","kw":"生气","m":"她很生气，不想跟男朋友说话。","en":"She's angry and doesn't want to talk to her boyfriend.","prompt":"a young woman with crossed arms turning away angrily from a young man who is trying to explain something"},
+  {"id":"p2-11","scene":"🌧️ 🚶‍♂️","kw":"伞","m":"外面下雨了，他忘了带伞。","en":"It's raining and he forgot his umbrella.","prompt":"a man in office clothes standing in the rain without an umbrella, holding his bag over his head, getting wet"},
+  {"id":"p2-12","scene":"🎂 🎉 👧","kw":"生日","m":"今天是她的生日，朋友们给她买了一个蛋糕。","en":"It's her birthday; her friends bought her a cake.","prompt":"a smiling girl about ten years old in front of a birthday cake with lit candles, friends clapping around her"},
+  {"id":"p2-13","scene":"👩‍🍳 🍳","kw":"做饭","m":"妈妈在厨房里做饭。","en":"Mum is cooking in the kitchen.","prompt":"a woman in her forties cooking in a home kitchen, stirring vegetables in a wok"},
+  {"id":"p2-14","scene":"🏃‍♂️ 🌅","kw":"跑步","m":"他每天早上都去跑步。","en":"He goes running every morning.","prompt":"a man in sportswear jogging along a riverside path in early morning light"},
+  {"id":"p2-15","scene":"👴 🍵 📖","kw":"一边","m":"爷爷一边喝茶一边看书。","en":"Grandpa is drinking tea while reading.","prompt":"an elderly man sitting in an armchair holding a cup of tea in one hand and reading a book"},
+  {"id":"p2-16","scene":"😴 🛋️","kw":"累","m":"她太累了，在沙发上睡着了。","en":"She was so tired she fell asleep on the sofa.","prompt":"a young woman asleep on a sofa with a laptop still open beside her, evening"},
+  {"id":"p2-17","scene":"🧥 🛍️","kw":"衣服","m":"他在商店里买衣服，这件衣服有点儿小。","en":"He's buying clothes; this jacket is a bit small.","prompt":"a man in a clothing shop trying on a jacket that is clearly too small for him, looking in a mirror"},
+  {"id":"p2-18","scene":"👩‍⚕️ 🩺","kw":"检查","m":"医生正在给病人检查身体。","en":"The doctor is examining a patient.","prompt":"a female doctor in a white coat listening to a patient's chest with a stethoscope in a clinic"},
+  {"id":"p2-19","scene":"🧒 🎨","kw":"画画儿","m":"这个孩子正在画画儿，画得很漂亮。","en":"This child is drawing, and the picture is pretty.","prompt":"a small child sitting at a table drawing a colourful picture with crayons, smiling"},
+  {"id":"p2-20","scene":"🚏 ⌚","kw":"等","m":"她在等公共汽车，可是车还没来。","en":"She's waiting for the bus, but it hasn't come yet.","prompt":"a woman standing at a city bus stop looking impatiently at her wristwatch"}
+]

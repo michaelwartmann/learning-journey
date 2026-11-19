@@ -1,0 +1,58 @@
+name: Speaking trainer pictures
+
+# Runs when scripts/speaking-scenes.json changes, or by hand: Actions → "Speaking trainer pictures" → Run workflow.
+# Needs the repository secret OPENROUTER_API_KEY (Settings → Secrets and variables → Actions).
+on:
+  push:
+    branches: [main]
+    paths: [scripts/speaking-scenes.json]
+  workflow_dispatch:
+    inputs:
+      ids:
+        description: "Only these scene ids (space separated, empty = all missing)"
+        required: false
+        default: ""
+      force:
+        description: "Redraw existing pictures"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+jobs:
+  draw:
+    runs-on: ubuntu-latest
+    env:
+      HAS_KEY: ${{ secrets.OPENROUTER_API_KEY != '' }}
+    steps:
+      - name: Key missing?
+        if: ${{ env.HAS_KEY != 'true' }}
+        run: echo "::warning::Add the repository secret OPENROUTER_API_KEY, then run this workflow again."
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Draw pictures
+        if: ${{ env.HAS_KEY == 'true' }}
+        env:
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+        run: node scripts/gen-images.mjs ${{ inputs.force && '--force' || '' }} ${{ inputs.ids }}
+      - name: Shrink to 640 px WebP
+        if: ${{ env.HAS_KEY == 'true' }}
+        run: |
+          npm i --no-save sharp@0.33
+          node -e '
+            const sharp=require("sharp"),fs=require("fs");
+            (async()=>{ for (const f of fs.readdirSync("img/speaking").filter(f=>f.endsWith(".png"))) {
+              const out="img/speaking/"+f.replace(".png",".webp");
+              await sharp("img/speaking/"+f).resize(640,640,{fit:"cover"}).webp({quality:78}).toFile(out); console.log("webp",out);
+            } })();'
+      - name: Commit
+        if: ${{ env.HAS_KEY == 'true' }}
+        run: |
+          git config user.name "speaking-images bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add img/speaking/*.webp
+          git commit -m "Speaking trainer: new pictures" || echo "nothing new"
+          git push
