@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#B8322A">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="icons/favicon-64.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="一步一步">
+<title>Appendix: train nights, bathhouse days · 一步一步 Step by Step</title>
+<meta name="description" content="A rough plan for travelling through China on night trains and sleeping in 24-hour bathhouses: a map, dates, Spring Festival in Chengdu and one or two bathhouses per city.">
+<link rel="stylesheet" href="fonts/fonts.css">
+<link rel="stylesheet" href="deck.css">
+</head>
+<body class="lang-en">
+<header class="top">
+  <a class="brand" href="index.html"><span class="zh">一步一步</span> Step by Step</a>
+  <nav>
+    <a href="index.html">The talk</a>
+    <a href="appendix.html" class="on">Appendix</a>
+    <a href="resources.html">Resources</a>
+  </nav>
+</header>
+
+<section class="intro">
+  <h1>Appendix: train nights, bathhouse days <span class="zh">澡堂地图</span></h1>
+  <p>A rough plan for the China trip: sleep on night trains, and between trains spend a day in a 24-hour bathhouse with a sauna, showers, fruit and a quiet hall to sleep in. A map, the dates, Spring Festival in Chengdu and one or two bathhouses per city. Point at (or tap) any Chinese character to see its pinyin.</p>
+  <div class="controls">
+    <button class="btn" id="present">▶ Present</button>
+    <button class="btn" id="playall" hidden>🔊 Listen from the start</button>
+  </div>
+</section>
+
+<main id="deck"></main>
+
+<div id="show" hidden>
+  <div class="showstage"><div class="stage"></div></div>
+  <div class="showbar">
+    <button class="btn" id="prev">‹</button>
+    <span id="count"></span>
+    <button class="btn" id="next">›</button>
+    <button class="btn" id="showaudio" hidden>🔊</button>
+    <button class="btn" id="close">✕ Close</button>
+  </div>
+</div>
+
+<footer>
+  <p>A personal, non-commercial learning journal. Prices and opening hours are only a guide and change often: check before you go. Map data: Natural Earth.</p>
+  <p><a href="index.html">The talk</a> · <a href="resources.html">Resources</a></p>
+</footer>
+<script>
+window.SLIDES_LIST = ['a1-cover','a2-map','a3-dates','a4-chengdu','a5-east-west','a6-south','a7-north'];
+window.EN_ONLY = true;
+window.NO_AUDIO = true;
+</script>
+<script src="deck.js"></script>
+<script>if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js",{scope:"."}).catch(()=>{})</script>
+</body>
+</html>

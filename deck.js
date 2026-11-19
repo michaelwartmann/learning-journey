@@ -2,10 +2,11 @@
 // A personal page sets window.PAGE='code' and window.OWN=['02','08']: those slides come from p-code-NN
 const PAGE = (window.PAGE || '').toLowerCase().replace(/[^a-z0-9]/g,'');
 const OWN = PAGE ? (window.OWN || ['08']) : [];
-const SLIDES = ['01-cover','02-ladder','03-anki','04-problem','05-speed','06-people','07-trip','08-thanks']
+// Another page (the appendix) can set window.SLIDES_LIST, window.EN_ONLY and window.NO_AUDIO first
+const SLIDES = (window.SLIDES_LIST || ['01-cover','02-ladder','03-anki','04-problem','05-speed','06-people','07-trip','08-thanks'])
   .map(id=>OWN.includes(id.slice(0,2)) ? `p-${PAGE}-${id.slice(0,2)}` : id);
 const deck = document.getElementById('deck');
-let lang = (location.hash === '#en') ? 'en' : 'zh';
+let lang = (window.EN_ONLY || location.hash === '#en') ? 'en' : 'zh';
 let cache = {};          // lang -> [{html, notes}]
 let audioOk = {};        // "lang/NN" -> bool
 const player = new Audio();
@@ -58,6 +59,7 @@ function fitAll(){ document.querySelectorAll('.stagewrap').forEach(fit); if(!sho
 
 async function checkAudio(l,i){
   const k = `${l}/${String(i+1).padStart(2,'0')}`;
+  if(window.NO_AUDIO) return false;
   if(k in audioOk) return audioOk[k];
   try{ const r = await fetch(`audio/${k}.mp3`,{method:'HEAD'}); audioOk[k] = r.ok; }catch(e){ audioOk[k]=false; }
   return audioOk[k];
@@ -84,7 +86,7 @@ async function render(){
   data.forEach((s,i)=>{
     const row = document.createElement('article'); row.className='slide'; row.id='s'+i;
     row.innerHTML = `<div class="stagewrap"><div class="stage">${s.html}</div></div>
-      <div class="notes"><div class="num">${lang==='en'?'Slide':'第'} ${i+1}${lang==='en'?' of 8':' 张 / 8'}</div>
+      <div class="notes"><div class="num">${lang==='en'?'Slide':'第'} ${i+1}${lang==='en'?' of '+SLIDES.length:' 张 / '+SLIDES.length}</div>
       <div class="bar"></div>${notesHTML(lang,s.notes,s.bullets)}</div>`;
     deck.appendChild(row);
     checkAudio(lang,i).then(ok=>{ if(!ok) return; const b=document.createElement('button'); b.className='btn small listen'; b.textContent='🔊 Listen'; b.onclick=()=>{queue=[];playSlide(i,b);}; row.querySelector('.bar').appendChild(b); updatePlayAll(); });
