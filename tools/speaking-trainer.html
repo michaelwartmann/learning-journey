@@ -66,18 +66,21 @@ textarea{min-height:70px}
 <div class="wrap">
   <p class="sub" style="margin:0 0 6px"><a href="../resources.html" style="color:#185fa5">‹ Resources</a></p>
   <h1>口语训练 · Speaking trainer</h1>
-  <p class="sub">HSK 3 (3.0) speaking: listen, speak, get help only when you need it.</p>
+  <p class="sub">HSK 3 (3.0) speaking and travel scenes: listen, speak, get help only when you need it.</p>
   <div class="tabs" id="tabs">
     <div class="tab on" data-p="1"><b>听后重复</b>Repeat</div>
     <div class="tab" data-p="2"><b>看图说话</b>Picture</div>
     <div class="tab" data-p="3"><b>回答问题</b>Question</div>
+    <div class="tab" data-p="4"><b>旅行</b>Travel</div>
   </div>
   <div id="view"></div>
   <p class="note" id="engine"></p>
+  <p class="note">Speech recognition: <select id="engsel" style="font-size:12px;padding:2px 4px;border:1px solid var(--line);border-radius:6px;background:#fff"><option value="auto">automatic</option><option value="browser">browser (Google / Apple)</option><option value="local">on this phone (works in China, offline)</option></select></p>
   <p class="note">All sentences, pictures and questions are original, written in the style of the HSK 3 (3.0) speaking test. Use Chrome on Android or Safari on iPhone for the microphone. Progress stays on your device. Pinyin: pinyin-pro (MIT).</p>
 </div>
 
 <script src="../vendor/pinyin-pro.js"></script>
+<script src="local-asr.js"></script>
 <script>
 const P1 = [
  {g:"把…放在…了",w:"我|把|钥匙|放在|桌子|上|了",p:"。",en:"I put the keys on the table."},
@@ -133,6 +136,7 @@ const P3 = [
 
 const store = {get(k,d){try{return JSON.parse(localStorage.getItem(k))??d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
 const $ = s => document.querySelector(s);
+let engPref = store.get("asrEngine","auto"), nativeBroken = store.get("nativeBroken",false);
 const esc = s => String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const hz = it => it.w.split("|").join("") + it.p;
 const PUNCT = /[\s，。？！、,.?!；;：:“”"'（）()…·]/g;
@@ -157,8 +161,16 @@ function say(text, rate=1){
   if (cap.tts){ cap.tts.speak(text,{language:"zh",rate:Math.max(.7,rate)}).catch(()=>{}); return; }
   flash("No Chinese voice on this device. Install a Chinese text-to-speech voice in your phone settings.");
 }
-function micMode(){ if (inFrame && cap.dict) return "dict"; if (SR && !inFrame) return "native"; if (cap.dict) return "dict"; if (SR) return "native"; return "type"; }
-function showEngine(){ const m = micMode(); $("#engine").textContent = "Voice: " + (zhVoice? zhVoice.name : cap.tts? "Claude voice" : "none found") + " · Microphone: " + ({native:"phone speech recognition",dict:"Claude dictation",type:"not available here, type instead"})[m]; }
+function micMode(){
+  if (inFrame && cap.dict) return "dict";
+  const localOK = !inFrame && window.LocalASR && LocalASR.supported;
+  if (engPref==="local" && localOK) return "local";
+  if (engPref==="browser" && SR) return "native";
+  if (SR && !nativeBroken && !inFrame) return "native";
+  if (localOK) return "local";
+  if (cap.dict) return "dict"; if (SR) return "native"; return "type";
+}
+function showEngine(){ const m = micMode(); $("#engine").textContent = "Voice: " + (zhVoice? zhVoice.name : cap.tts? "Claude voice" : "none found") + " · Microphone: " + ({native:"browser speech recognition",local:"on-phone recognizer (works offline and in China)",dict:"Claude dictation",type:"not available here, type instead"})[m]; }
 
 let dictSink = null, dictWired = false;
 function makeRec(onText, continuous){
@@ -171,10 +183,25 @@ function makeRec(onText, continuous){
       if (mode==="native"){
         const r = new SR(); r.lang="zh-CN"; r.interimResults=true; r.continuous=!!continuous;
         r.onresult = e => { partial=""; for (let i=e.resultIndex;i<e.results.length;i++){ const t=e.results[i][0].transcript; if (e.results[i].isFinal) finalTxt+=t; else partial+=t; } emit(); };
-        r.onerror = e => { if (e.error==="not-allowed") flash("Microphone blocked. Allow it in the browser, or type your answer."); };
+        r.onerror = e => {
+          if (e.error==="not-allowed") flash("Microphone blocked. Allow it in the browser, or type your answer.");
+          else if (["network","service-not-allowed","language-not-supported"].includes(e.error) && window.LocalASR && LocalASR.supported) {
+            nativeBroken = true; store.set("nativeBroken", true); showEngine();
+            flash("The browser's speech service isn't reachable here. Switched to the on-phone recognizer: tap the mic again.");
+          }
+        };
         r.onend = () => { if (active && continuous) { try{ r.start() }catch(e){} } else { active=false; this.onend && this.onend(finalTxt+partial); } };
         stopFn = () => { active=false; try{ r.stop() }catch(e){} };
         try { r.start() } catch(e){ flash("Couldn't start the microphone."); }
+      } else if (mode==="local"){
+        let h = null, stopReq = false;
+        const first = !store.get("asrReady", false);
+        $("#said").textContent = first ? "Loading the on-phone recognizer (about 37 MB, only the first time)…" : "…";
+        LocalASR.load((a,b)=>{ if (active) $("#said").textContent = `Loading the on-phone recognizer: ${a} / ${b} MB (only the first time)…`; }).catch(()=>{});
+        LocalASR.start({ onText: t => { partial = t; emit(); }, onEndpoint: () => { if (!continuous) this.stop(); } })
+          .then(x => { h = x; store.set("asrReady", true); if (first) $("#said").textContent = "Ready, speak now"; if (stopReq) this.stop(); })
+          .catch(e => { active = false; flash("Couldn't start the on-phone recognizer: " + (e && e.message || e) + ". Type your answer instead."); this.onend && this.onend(""); });
+        stopFn = () => { stopReq = true; if (h) { const hh = h; h = null; hh.stop().then(t => { if (active) { active = false; this.onend && this.onend(t); } }); } };
       } else if (mode==="dict"){
         const d = cap.dict;
         dictSink = {
@@ -263,14 +290,16 @@ function buildTiles(it){
   shuffle(words.map((w,i)=>({w,i}))).forEach(o=>{ const t=document.createElement("span"); t.className="tile"; t.textContent=o.w; t.onclick=()=>{ t.classList.add("used"); const s=document.createElement("span"); s.className="tile"; s.textContent=o.w; s.onclick=()=>{s.remove();t.classList.remove("used")}; slot.appendChild(s); }; pool.appendChild(t); });
   $("#tcheck").onclick=()=>{ const got=[...slot.children].map(x=>x.textContent).join(""); const ok = got===words.join(""); $("#tres").innerHTML = ok? '<span class="g">✓ Right order. Now say it out loud.</span>' : '<span class="r">Not yet. Tap a tile to take it back.</span>'; };
 }
+let activeRec = null;
 function wireMic(onDone, continuous, onStart){
   const btn=$("#mic"); if(!btn) return null;
   const mode=micMode(); if(mode==="type"){ btn.disabled=true; btn.title="No microphone here"; return null; }
   let rec=null;
   btn.onclick=()=>{
     if(rec){ rec.stop(); return; }
-    rec = makeRec(t=>{ $("#said").textContent=t; }, continuous);
-    rec.onend = t => { btn.classList.remove("rec"); rec=null; clearInterval(tick); if(t.trim()) onDone(t.trim()); else $("#said").textContent="(nothing heard, tap the mic and try again)"; };
+    rec = makeRec(t=>{ $("#said").textContent=t; }, continuous); activeRec = rec;
+    if (!continuous) { const r0 = rec; setTimeout(()=>{ if (rec === r0) r0.stop(); }, 12000); }
+    rec.onend = t => { btn.classList.remove("rec"); rec=null; activeRec=null; clearInterval(tick); if(t.trim()) onDone(t.trim()); else $("#said").textContent="(nothing heard, tap the mic and try again)"; };
     btn.classList.add("rec"); $("#said").textContent="…"; rec.start(); onStart && onStart();
   };
   return { stop(){ rec && rec.stop(); } };
@@ -381,11 +410,182 @@ function showP3Result(it, said, secs){
   teacher(`Answer the question "${it.q}" (${it.en}) for about 1.5 minutes.`, said, it.m).then(fb=>renderFeedback($("#fb"),fb));
 }
 
+/* ---------- Travel scenes ---------- */
+const ZD = "零一二三四五六七八九";
+function num2zh(n){
+  if (n < 10) return ZD[n];
+  if (n < 20) return "十" + (n % 10 ? ZD[n % 10] : "");
+  const units = ["千","百","十",""], ds = String(n).padStart(4,"0").split("").map(Number);
+  let s = "", started = false, zero = false;
+  ds.forEach((d,i)=>{ if (d === 0) { if (started) zero = true; return; } if (zero) { s += "零"; zero = false; } s += ZD[d] + units[i]; started = true; });
+  return s.replace(/^二(百|千)/, "两$1");
+}
+const digitsZh = s => String(s).split("").map(d => ZD[+d]).join("");
+function zhRun2num(r){
+  const v = c => c === "两" ? 2 : c === "〇" ? 0 : ZD.indexOf(c);
+  if (!/[十百千]/.test(r)) return r.split("").map(v).join("");
+  let total = 0, cur = 0;
+  for (const c of r) { const d = v(c); if (d >= 0) cur = d; else { total += (cur || 1) * (c === "十" ? 10 : c === "百" ? 100 : 1000); cur = 0; } }
+  return String(total + cur);
+}
+const canon = t => String(t).replace(PUNCT,"").replace(/[零〇一二两三四五六七八九十百千]+/g, zhRun2num).toLowerCase();
+const sylStr = t => { try { return window.pinyinPro ? pinyinPro.pinyin(t,{toneType:"none"}).replace(/\s+/g,"") : t } catch(e){ return t } };
+function hasKey(answer, alt){ const a = canon(answer), k = canon(alt); return a.includes(k) || sylStr(a).includes(sylStr(k)); }
+const pick = a => a[Math.floor(Math.random()*a.length)];
+const fill = (t, v) => String(t).replace(/\{(\w+)\}/g, (_,k) => v[k] ?? "");
+
+const REPAIR = [
+  {zh:"请再说一遍。", en:"Please say that again."},
+  {zh:"请说慢一点儿。", en:"Please speak a bit more slowly."},
+  {zh:"我听不懂，能写下来吗？", en:"I don't understand. Could you write it down?"},
+  {zh:"对不起，我的中文不太好。", en:"Sorry, my Chinese isn't very good."},
+  {zh:"这个用中文怎么说？", en:"How do you say this in Chinese?"}
+];
+const REPAIR_RE = /再说|说慢|慢一点|听不懂|写下来|没听懂|不明白/;
+
+const SCENES = [
+ { id:"hostel", zh:"青旅入住", py:"qīnglǚ rùzhù", en:"Hostel check-in", who:"前台 · receptionist",
+   task:"Check in for the nights you booked, pay, and find out where your room is.",
+   make(){ const n = pick([2,3,4]), p = pick([45,50,55,60,65,70,80]), room = pick([2,3,4,5]) + "0" + pick([1,2,3,5,6,8]), bed = pick(["上铺","下铺"]);
+     return { n: n===2 ? "两" : num2zh(n), n_ar:n, p:num2zh(p), p_ar:p, total:num2zh(n*p), total_ar:n*p, room:digitsZh(room), room_ar:room, bed, bed_en: bed==="上铺"?"upper bunk":"lower bunk" }; },
+   turns:[
+    { npc:"你好！欢迎！请问你有预订吗？", npcEn:"Hello, welcome! Do you have a booking?",
+      goal:"Say yes, you booked online.", model:"有|，|我|在|网上|订|了", need:[["订"]] },
+    { npc:"好的，请给我看一下你的护照。", npcEn:"OK, please show me your passport.",
+      goal:"Hand it over: \"Here you are, this is my passport.\"", model:"给你|，|这|是|我的|护照", need:[["护照","给你"]] },
+    { npc:"你住{n}个晚上，对吗？", npcEn:"You're staying {n_ar} nights, right?",
+      goal:"Confirm, and say the number of nights back.", model:"对|，|住|{n}个|晚上", need:[["{n}"]] },
+    { npc:"一个晚上{p}块，一共{total}块。微信还是支付宝？", npcEn:"{p_ar} yuan a night, {total_ar} in total. WeChat or Alipay?",
+      goal:"Repeat the total and say you'll pay with Alipay.", model:"一共|{total}块|，|我|用|支付宝", need:[["{total}"],["支付宝","微信"]] },
+    { npc:"你的房间是{room}，{bed}。早饭七点到九点。", npcEn:"Your room is {room_ar}, {bed_en}. Breakfast is 7 to 9.",
+      goal:"Repeat the room number and ask where the lift is.", model:"{room}|，|好的|。|请问|电梯|在|哪儿", need:[["{room}"],["电梯"]] }
+   ], bye:"在那边，左边。祝你住得愉快！", byeEn:"Over there, on the left. Enjoy your stay!" },
+
+ { id:"noodles", zh:"点一碗面", py:"diǎn yì wǎn miàn", en:"Ordering noodles", who:"服务员 · waiter",
+   task:"Order a bowl of beef noodles, small, not spicy, to eat in, and pay.",
+   make(){ const s = pick([12,14,15,16,18]), l = s + pick([3,4,5]); return { s:num2zh(s), s_ar:s, l:num2zh(l), l_ar:l }; },
+   turns:[
+    { npc:"你好，吃点儿什么？", npcEn:"Hi, what would you like to eat?",
+      goal:"Order one bowl of beef noodles (measure word 碗).", model:"我|要|一碗|牛肉面", need:[["牛肉面"],["碗"]] },
+    { npc:"大碗还是小碗？大碗{l}块，小碗{s}块。", npcEn:"Large or small? Large is {l_ar} yuan, small is {s_ar}.",
+      goal:"Take the small one and say its price back.", model:"小碗|，|{s}块", need:[["小碗"],["{s}"]] },
+    { npc:"要辣的吗？", npcEn:"Do you want it spicy?",
+      goal:"Not spicy, please.", model:"不要|辣|，|谢谢", need:[["不要辣","不辣","不要太辣","微辣"]] },
+    { npc:"在这儿吃还是带走？", npcEn:"Eat here or take away?",
+      goal:"Eat here.", model:"在|这儿|吃", need:[["这儿吃","这里吃","在这"]] },
+    { npc:"好的，一共{s}块。扫这个码吧。", npcEn:"OK, {s_ar} yuan altogether. Scan this code.",
+      goal:"Ask whether you can pay with Alipay.", model:"可以|用|支付宝|吗", need:[["支付宝"]] }
+   ], bye:"可以。请坐，面马上就好。", byeEn:"Sure. Have a seat, the noodles will be ready soon." },
+
+ { id:"sleeper", zh:"买卧铺票", py:"mǎi wòpù piào", en:"Buying a sleeper ticket", who:"售票员 · ticket clerk",
+   task:"Buy one ticket to Chengdu for tomorrow night, sleeper, and note time and carriage.",
+   make(){ const h = pick([7,8,9,10]), half = Math.random() < .5, car = pick([5,6,7,8,9,11,12,13]), p = pick([186,212,235,258,264]);
+     const t = "晚上" + num2zh(h) + "点" + (half ? "半" : "");
+     return { t, t_key: num2zh(h) + "点", t_en: (h + 12) + (half ? ":30" : ":00"), car:num2zh(car), car_ar:car, p:num2zh(p), p_ar:p }; },
+   turns:[
+    { npc:"你好，去哪儿？", npcEn:"Hello, where to?",
+      goal:"One ticket to Chengdu for tomorrow night.", model:"我|要|一张|明天|晚上|去|成都|的|票", need:[["成都"],["明天"],["票","张"]] },
+    { npc:"明天{t}有一趟车，有卧铺。要硬卧还是软卧？", npcEn:"There's a train tomorrow at {t_en}, with sleepers. Hard or soft sleeper?",
+      goal:"Hard sleeper, lower berth.", model:"硬卧|，|下铺", need:[["硬卧"],["下铺"]] },
+    { npc:"下铺没有了，只有中铺和上铺。", npcEn:"No lower berths left, only middle and upper.",
+      goal:"Then take the middle berth.", model:"那|我|要|中铺|吧", need:[["中铺"]] },
+    { npc:"中铺{p}块。请给我你的护照。", npcEn:"Middle berth is {p_ar} yuan. Your passport, please.",
+      goal:"Say the price back and hand over your passport.", model:"{p}块|，|好的|。|这|是|我的|护照", need:[["{p}"],["护照"]] },
+    { npc:"好了。{t}出发，{car}号车厢，中铺。", npcEn:"Done. Departure {t_en}, carriage {car_ar}, middle berth.",
+      goal:"Repeat the time and the carriage number to check.", model:"{t}|，|{car}号|车厢|，|谢谢", need:[["{t_key}"],["{car}号","{car}车厢"]] }
+   ], bye:"不客气，一路平安！", byeEn:"You're welcome. Have a safe trip!" }
+];
+
+let tv = { scene:null, v:null, i:0, ok:new Set(), repairs:0 };
+function renderTravel(){
+  if (!tv.scene) {
+    $("#view").innerHTML = `<div class="card">
+      <div class="meta"><span>旅行情景 · travel scenes</span><span>Chinese first</span></div>
+      <p style="margin:0 0 10px;font-size:14px;color:var(--muted)">Someone talks to you; you answer. Numbers change every round, so listen for them. Stuck? "Help me out" gives you the phrases to ask again.</p>
+      ${SCENES.map(s=>`<button class="scene-btn" data-s="${s.id}" style="display:block;width:100%;text-align:left;margin:8px 0;padding:12px"><span class="hz" style="font-size:20px">${s.zh}</span> <span class="py">${s.py}</span><br><span class="en">${esc(s.en)} · ${esc(s.who)}</span></button>`).join("")}
+      <p class="note">More scenes after 13 December: bathhouse, bike rental, asking the way, Spring Festival, night-train small talk.</p></div>`;
+    document.querySelectorAll(".scene-btn").forEach(b=>b.onclick=()=>startScene(b.dataset.s));
+    return;
+  }
+  renderTurn();
+}
+function startScene(id){ const s = SCENES.find(x=>x.id===id); tv = { scene:s, v:s.make(), i:0, ok:new Set(), repairs:0 }; try{ history.replaceState(null,"","#travel-"+id) }catch(e){} renderTurn(true); }
+function renderTurn(autoplay){
+  const s = tv.scene, v = tv.v;
+  if (tv.i >= s.turns.length) return renderSceneEnd();
+  const t = s.turns[tv.i], npc = fill(t.npc, v), model = fill(t.model, v);
+  $("#view").innerHTML = `<div class="card">
+    <div class="meta"><span>${s.zh} · ${esc(s.en)}</span><span>${tv.i+1} / ${s.turns.length}</span></div>
+    <div class="note" style="margin:0 0 8px">${esc(s.task)}</div>
+    <div class="fb" style="margin-top:0"><div class="label" style="margin-top:0">${esc(s.who)}</div>
+      <div class="row"><button class="pri" id="play">▶ Listen</button><button id="slow">慢 0.7×</button></div>
+      <div class="row" style="margin-top:8px"><button data-h="1">汉字</button><button data-h="2">拼音</button><button data-h="3">English</button></div>
+      <div class="reveal" id="rev"></div></div>
+    <div class="label">Your turn</div>
+    <div style="font-size:15px">${esc(t.goal)}</div>
+    <div class="row" style="margin-top:8px"><button id="tiles">拼句子 tiles</button><button id="helpme">Help me out</button></div>
+    <div id="helpbox" class="hide"></div>
+    <div id="tilebox" class="hide"><div class="slot" id="slot"></div><div class="tiles" style="margin-top:8px" id="pool"></div><div class="row" style="margin-top:8px"><button id="tcheck">Check order</button><span id="tres" class="score"></span></div></div>
+    <div class="row" style="justify-content:center;margin-top:12px"><button class="big mic" id="mic" aria-label="Speak">🎤</button></div>
+    <div class="said" id="said" style="text-align:center;margin-top:6px"></div>
+    <div class="row" style="margin-top:8px"><input type="text" id="typed" placeholder="或者打字 / or type" style="flex:1"><button id="tsub">Check</button></div>
+    <div id="result"></div>
+    <div class="row" style="margin-top:12px;justify-content:space-between"><button id="leave">‹ Scenes</button><button id="skip">Skip turn ›</button></div>
+  </div>`;
+  const play = r => say(npc, r);
+  $("#play").onclick = () => play(1); $("#slow").onclick = () => play(.7);
+  document.querySelectorAll("[data-h]").forEach(b=>b.onclick=()=>{ b.disabled = true; const h = +b.dataset.h;
+    $("#rev").insertAdjacentHTML("beforeend", h===1 ? `<div class="hz">${esc(npc)}</div>` : h===2 ? `<div class="py">${esc(py(npc))}</div>` : `<div class="en">${esc(fill(t.npcEn, v))}</div>`); });
+  $("#tiles").onclick = () => { $("#tiles").disabled = true; buildTiles({ w: model.split("|").filter(x=>!/^[，。]$/.test(x)).join("|") }); };
+  $("#helpme").onclick = () => { const hb = $("#helpbox"); hb.classList.toggle("hide");
+    hb.innerHTML = `<div class="fb">${REPAIR.map((r,i)=>`<div class="row" style="margin:4px 0"><button data-r="${i}" style="padding:4px 10px">▶</button><span class="hz" style="font-size:17px">${r.zh}</span><span class="en">${esc(r.en)}</span></div>`).join("")}<div class="note">Say one of these and the ${esc(s.who.split(" · ")[1])} repeats, slower.</div></div>`;
+    hb.querySelectorAll("[data-r]").forEach(b=>b.onclick=()=>say(REPAIR[+b.dataset.r].zh,.9)); };
+  $("#leave").onclick = () => { tv.scene = null; try{ history.replaceState(null,"","#travel") }catch(e){} renderTravel(); };
+  $("#skip").onclick = () => { tv.i++; renderTurn(true); };
+  const check = said => {
+    if (REPAIR_RE.test(said)) {
+      tv.repairs++;
+      $("#result").innerHTML = `<div class="fb"><span class="g">✓ Good move.</span> ${esc(s.who.split(" · ")[1])}: <span class="hz" style="font-size:18px">${esc(npc)}</span></div>`;
+      if (/写/.test(said)) $("#rev").innerHTML = `<div class="hz">${esc(npc)}</div>`;
+      say(npc, .75); return;
+    }
+    const res = t.need.map(group => { const alts = group.map(a => fill(a, v)); return { label: alts[0], ok: alts.some(a => hasKey(said, a)) }; });
+    const all = res.every(r => r.ok);
+    if (all) tv.ok.add(tv.i);
+    $("#result").innerHTML = `<div class="label">Key words</div>
+      <div>${res.map(r=>`<span class="pill" style="margin:2px;${r.ok?"":"background:var(--badbg);color:var(--bad)"}">${r.ok?"✓":"✗"} ${esc(r.label)}</span>`).join(" ")}</div>
+      <div class="score">${all ? '<span class="g">Understood. Well done.</span>' : '<span style="color:var(--bad)">Not quite there. Listen again or look at the natural answer.</span>'}</div>
+      <div class="label">Natural answer</div><div class="hz">${esc(model.replace(/\|/g,""))}。</div><div class="py">${esc(py(model.replace(/\|/g,"")))}</div>
+      <div class="row" style="margin-top:8px"><button id="sayM">▶ Hear it</button>${all ? '<button class="pri" id="next">Next ›</button>' : '<button id="retry">Try again</button><button id="next">Next anyway ›</button>'}</div>`;
+    $("#sayM").onclick = () => say(model.replace(/\|/g,""), .9);
+    if ($("#retry")) $("#retry").onclick = () => { $("#result").innerHTML = ""; $("#said").textContent = ""; };
+    $("#next").onclick = () => { tv.i++; renderTurn(true); };
+  };
+  wireMic(check, false);
+  $("#tsub").onclick = () => { const x = $("#typed").value.trim(); if (!x) { flash("Type your answer first."); return; } check(x); };
+  if (autoplay) setTimeout(() => play(1), 300);
+}
+function renderSceneEnd(){
+  const s = tv.scene;
+  bump("tv_" + s.id, tv.ok.size === s.turns.length ? "good" : "again");
+  $("#view").innerHTML = `<div class="card">
+    <div class="meta"><span>${s.zh} · ${esc(s.en)}</span><span>done</span></div>
+    <div class="fb" style="margin-top:0"><div class="label" style="margin-top:0">${esc(s.who)}</div><div class="hz">${esc(s.bye)}</div><div class="en">${esc(s.byeEn)}</div></div>
+    <div class="score" style="margin-top:12px"><span class="pill">${tv.ok.size} / ${s.turns.length} turns understood</span> ${tv.repairs ? `<span class="pill">${tv.repairs}× asked to repeat</span>` : ""}</div>
+    <p class="note">Asking again is a skill, not a failure: on the trip it is what keeps the conversation going in Chinese.</p>
+    <div class="row" style="margin-top:10px"><button class="pri" id="again">Again, new numbers</button><button id="leave">‹ Scenes</button></div></div>`;
+  say(s.bye);
+  $("#again").onclick = () => startScene(s.id);
+  $("#leave").onclick = () => { tv.scene = null; renderTravel(); };
+}
+
 /* ---------- tabs ---------- */
+(function(){ const sel=$("#engsel"); if(!sel) return; sel.value=engPref; sel.onchange=()=>{ engPref=sel.value; store.set("asrEngine",engPref); if(engPref==="browser"){ nativeBroken=false; store.set("nativeBroken",false);} showEngine(); render(); }; })();
 let part = 1;
-function render(){ clearInterval(tick); try{speechSynthesis.cancel()}catch(e){} document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("on",+t.dataset.p===part)); ({1:renderP1,2:renderP2,3:renderP3})[part](); showEngine(); }
-document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{ part=+t.dataset.p; render(); });
-render();
+function render(){ if (activeRec) { const r = activeRec; activeRec = null; r.onend = null; r.stop(); } clearInterval(tick); try{speechSynthesis.cancel()}catch(e){} document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("on",+t.dataset.p===part)); ({1:renderP1,2:renderP2,3:renderP3,4:renderTravel})[part](); showEngine(); }
+document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{ part=+t.dataset.p; if (part===4) tv.scene=null; render(); });
+window.addEventListener("hashchange", () => { const h = location.hash.slice(1); if (!h.startsWith("travel")) return; const id = h.split("-")[1]; part = 4; if (id && SCENES.some(x=>x.id===id)) { if (!tv.scene || tv.scene.id !== id) { render(); startScene(id); } } else { tv.scene = null; render(); } });
+(function(){ const h = location.hash.slice(1); if (h.startsWith("travel")) { part = 4; } render(); const id = h.split("-")[1]; if (part===4 && id && SCENES.some(x=>x.id===id)) startScene(id); })();
 </script>
 </body>
 </html>

@@ -25,6 +25,7 @@ self.addEventListener("fetch", (e) => {
   const key = new Request(url.origin + url.pathname); // ignore ?query and no-cache flags for the saved copy
   e.respondWith(caches.open(CACHE).then(async (c) => {
     const saved = await c.match(key);
+    if (saved && url.pathname.includes("/vendor/sherpa/")) return saved; // 37 MB recognizer: keep the saved copy, no background refresh
     const fresh = fetch(req).then((r) => { if (r.ok) c.put(key, r.clone()); return r; });
     if (saved) { e.waitUntil(fresh.catch(() => {})); return saved; }
     return fresh.catch(async () => (req.mode === "navigate" &&
