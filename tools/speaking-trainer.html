@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#B8322A">
+<link rel="manifest" href="../manifest.webmanifest">
+<link rel="icon" type="image/png" href="../icons/favicon-64.png">
+<link rel="apple-touch-icon" href="../icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="一步一步">
+<title>HSK 3 Speaking Trainer · 口语训练</title>
+<link rel="stylesheet" href="../fonts/fonts.css">
+<style>
+:root{--ink:#1a1a18;--muted:#5f5e5a;--line:#d9d7cf;--bg:#fafaf7;--card:#fff;--acc:#185fa5;--accbg:#e6f1fb;--ok:#3b6d11;--okbg:#eaf3de;--warn:#854f0b;--warnbg:#faeeda;--bad:#a32d2d;--badbg:#fcebeb}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,"PingFang SC","Noto Sans SC",sans-serif;background:var(--bg);color:var(--ink);font-size:16px;line-height:1.5}
+.wrap{max-width:560px;margin:0 auto;padding:14px 14px 80px}
+h1{font-size:20px;font-weight:600;margin:4px 0 2px}
+.sub{color:var(--muted);font-size:13px;margin:0 0 12px}
+.tabs{display:flex;gap:6px;overflow-x:auto;margin-bottom:12px}
+.tab{flex:1;min-width:0;border:1px solid var(--line);background:var(--card);border-radius:10px;padding:8px 6px;font-size:13px;text-align:center;cursor:pointer;color:var(--ink)}
+.tab b{display:block;font-size:15px;font-weight:600}
+.tab.on{border-color:var(--acc);background:var(--accbg);color:#0c447c}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.meta{font-size:12px;color:var(--muted);display:flex;justify-content:space-between;margin-bottom:10px}
+button{font:inherit;font-size:14px;border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:10px;padding:8px 12px;cursor:pointer}
+button:active{transform:scale(.98)}
+button.pri{background:var(--acc);border-color:var(--acc);color:#fff}
+button.big{width:72px;height:72px;border-radius:50%;font-size:28px;padding:0}
+button.mic.rec{background:var(--bad);border-color:var(--bad);color:#fff}
+.hz{font-size:24px;line-height:1.5;margin:6px 0 0}
+.py{font-size:15px;color:#0c447c;margin:2px 0}
+.en{font-size:14px;color:var(--muted)}
+.reveal{min-height:8px;margin:12px 0}
+.label{font-size:12px;color:var(--muted);margin:14px 0 6px}
+.tiles{display:flex;flex-wrap:wrap;gap:6px}
+.tile{font-size:19px;padding:6px 10px;border:1px solid var(--line);border-radius:8px;background:#fff;cursor:pointer}
+.tile.used{opacity:.25;pointer-events:none}
+.slot{min-height:46px;border:1px dashed #b4b2a9;border-radius:10px;padding:6px;display:flex;flex-wrap:wrap;gap:6px}
+.slot .tile{background:var(--accbg);border-color:#85b7eb}
+.said{font-size:15px;color:var(--muted);min-height:22px}
+.diff span{font-size:24px}
+.g{color:var(--ok)} .y{color:var(--warn);background:var(--warnbg);border-radius:4px} .r{color:var(--bad);background:var(--badbg);border-radius:4px;text-decoration:underline}
+.score{font-size:13px;margin-top:6px}
+.pill{display:inline-block;font-size:12px;padding:2px 8px;border-radius:999px;background:var(--accbg);color:#0c447c}
+input[type=text],textarea{width:100%;font:inherit;font-size:16px;border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:#fff;color:var(--ink)}
+textarea{min-height:70px}
+.scene{font-size:64px;text-align:center;line-height:1.2;padding:18px 0;background:#f4f3ee;border-radius:12px;letter-spacing:6px}
+.timer{font-size:34px;font-variant-numeric:tabular-nums;font-weight:600;text-align:center;margin:8px 0}
+.timer.hot{color:var(--bad)}
+.fb{background:#f7f6f2;border-radius:10px;padding:10px 12px;margin-top:10px;font-size:14px}
+.fb .hz{font-size:19px}
+.note{font-size:12px;color:var(--muted);margin-top:10px}
+.hide{display:none}
+.rate{display:flex;gap:6px;margin-top:14px}
+.rate button{flex:1}
+.err{color:var(--bad);font-size:13px;margin-top:4px}
+.frame{font-size:13px;color:var(--muted);background:#f4f3ee;border-radius:8px;padding:8px 10px;margin-top:8px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="sub" style="margin:0 0 6px"><a href="../resources.html" style="color:#185fa5">‹ Resources</a></p>
+  <h1>口语训练 · Speaking trainer</h1>
+  <p class="sub">HSK 3 (3.0) speaking: listen, speak, get help only when you need it.</p>
+  <div class="tabs" id="tabs">
+    <div class="tab on" data-p="1"><b>听后重复</b>Repeat</div>
+    <div class="tab" data-p="2"><b>看图说话</b>Picture</div>
+    <div class="tab" data-p="3"><b>回答问题</b>Question</div>
+  </div>
+  <div id="view"></div>
+  <p class="note" id="engine"></p>
+  <p class="note">All sentences, pictures and questions are original, written in the style of the HSK 3 (3.0) speaking test. Use Chrome on Android or Safari on iPhone for the microphone. Progress stays on your device. Pinyin: pinyin-pro (MIT).</p>
+</div>
+
+<script src="../vendor/pinyin-pro.js"></script>
+<script>
+const P1 = [
+ {g:"把…放在…了",w:"我|把|钥匙|放在|桌子|上|了",p:"。",en:"I put the keys on the table."},
+ {g:"把…给我",w:"请|把|你的|护照|给|我|看|一下",p:"。",en:"Please let me see your passport."},
+ {g:"adj + 坏了",w:"今天|走了|很多|路|，|我|饿坏了",p:"。",en:"I walked a lot today, I'm starving."},
+ {g:"adj + 坏了",w:"听到|这个|消息|，|妈妈|高兴坏了",p:"。",en:"Hearing the news, Mum was overjoyed."},
+ {g:"…的话，就…",w:"你|有|时间|的话|，|就|来|我家|吃饭|吧",p:"。",en:"If you have time, come and eat at my place."},
+ {g:"…的话，就…",w:"明天|下雨|的话|，|我们|就|不|去|了",p:"。",en:"If it rains tomorrow, we won't go."},
+ {g:"A 比 B + adj + 多了",w:"今天|比|昨天|冷|多了",p:"。",en:"Today is much colder than yesterday."},
+ {g:"A 比 B + adj + 多了",w:"坐|高铁|比|坐|飞机|方便|多了",p:"。",en:"Taking the high-speed train is much more convenient than flying."},
+ {g:"对…感兴趣",w:"我|对|中国|文化|很|感兴趣",p:"。",en:"I'm very interested in Chinese culture."},
+ {g:"对…不感兴趣",w:"他|对|历史|不|感兴趣",p:"。",en:"He isn't interested in history."},
+ {g:"time + 后",w:"火车|十分钟|后|开",p:"。",en:"The train leaves in ten minutes."},
+ {g:"time + 以后",w:"我们|半个小时|以后|在|门口|见",p:"。",en:"Let's meet at the entrance in half an hour."},
+ {g:"每天 + transport + 去",w:"他|每天|坐|地铁|去|上班",p:"。",en:"He takes the metro to work every day."},
+ {g:"每天 + transport + 去",w:"我|每天|骑|自行车|去|公园",p:"。",en:"I ride my bike to the park every day."},
+ {g:"越来越…了",w:"天气|越来越|冷|了",p:"。",en:"The weather is getting colder and colder."},
+ {g:"越来越…了",w:"我的|汉语|越来越|好|了",p:"。",en:"My Chinese is getting better and better."}
+];
+const P2 = [
+ {scene:"👨‍💼 📰",kw:"报纸",m:["这个男人正在看报纸。"],en:"This man is reading a newspaper."},
+ {scene:"👦 😭",kw:"哭",m:["这个孩子在哭，他很难过。"],en:"This child is crying; he's very sad."},
+ {scene:"🤕 🛏️",kw:"头疼",m:["他头疼，身体不太舒服。"],en:"He has a headache and doesn't feel well."},
+ {scene:"👩 📱 😊",kw:"打电话",m:["她在给朋友打电话，看起来很高兴。"],en:"She's phoning a friend and looks happy."},
+ {scene:"🌳 🚴‍♂️ ☀️",kw:"骑",m:["今天天气很好，一个男人在公园里骑自行车。"],en:"The weather is nice today; a man is riding a bike in the park."},
+ {scene:"🧳 🚄 👫",kw:"高铁",m:["他们坐高铁去旅游，看起来很高兴。"],en:"They're taking the high-speed train on a trip and look happy."},
+ {scene:"🥢 🍜 😋",kw:"面条",m:["她在饭馆里吃面条，面条特别好吃。"],en:"She's eating noodles in a restaurant; they're especially good."},
+ {scene:"📚 👩‍🎓 ✍️",kw:"认真",m:["这个学生正在认真地学习，她明天有考试。"],en:"This student is studying hard; she has an exam tomorrow."},
+ {scene:"🏸 🏃‍♀️ 🏃‍♂️",kw:"比赛",m:["两个人正在参加羽毛球比赛。"],en:"Two people are playing in a badminton match."},
+ {scene:"👩 😠 👨",kw:"生气",m:["她很生气，不想跟男朋友说话。"],en:"She's angry and doesn't want to talk to her boyfriend."},
+ {scene:"🌧️ 🚶‍♂️ ☔",kw:"带",m:["外面下雨了，他忘了带伞。"],en:"It's raining outside and he forgot his umbrella."},
+ {scene:"🎂 🎉 👧",kw:"生日",m:["今天是她的生日，朋友们给她买了一个蛋糕。"],en:"It's her birthday; her friends bought her a cake."}
+];
+const P3 = [
+ {q:"请介绍一下你的一位家人。",en:"Please introduce a member of your family.",m:"我想介绍一下我的妈妈。她是一个很热情的人，朋友很多。她特别喜欢做饭，做的菜非常好吃。每次我回家的时候，她都给我做我最喜欢的菜。她也很关心别人，常常帮助邻居。虽然我们不住在一起，但是我们每个星期都打电话。我很爱我的妈妈。"},
+ {q:"你喜欢做什么样的工作？为什么？",en:"What kind of work do you like? Why?",m:"我喜欢比较自由的工作。因为我不太喜欢每天都在办公室里坐八个小时。我现在是网球老师，也做电脑方面的工作。当网球老师可以在外面运动，还能认识很多人。比如上个星期，我教了一个七岁的孩子，他进步得很快，我特别高兴。所以我觉得自由又有意思的工作最适合我。"},
+ {q:"你周末一般做什么？为什么？",en:"What do you usually do at the weekend? Why?",m:"我周末一般去运动，有时候打网球，有时候去健身房。因为平时我要工作和学习汉语，所以周末想让身体动一动。比如上个周末，我早上打了两个小时网球，下午去朋友家喝茶。运动以后我觉得很舒服，心情也很好。所以我很喜欢这样过周末。"},
+ {q:"请介绍一下你的一个好朋友。",en:"Please introduce one of your good friends.",m:"我想介绍一下我的好朋友。他是我的大学同学，我们认识已经二十多年了。他个子很高，很爱笑，也很热情。我们都喜欢骑自行车，所以经常一起去骑车。他工作很忙，可是我有问题的时候，他总是帮助我。我觉得有这样的朋友很幸福。"},
+ {q:"你喜欢什么样的天气？为什么？",en:"What kind of weather do you like? Why?",m:"我最喜欢秋天的天气，不太冷也不太热。因为这样的天气很适合出去运动，比如骑自行车或者跑步。夏天太热了，我很容易累。冬天虽然很冷，但是我也不怕冷。总的来说，我还是觉得秋天最舒服。"},
+ {q:"你最想去中国的哪个城市？为什么？",en:"Which Chinese city do you most want to visit? Why?",m:"我最想去成都。因为我听说成都人很热情，生活也很慢，很舒服。而且成都的菜很有名，我很喜欢吃辣的。我还想在那儿骑自行车，看看熊猫。明年春节我打算在成都过，我觉得一定会很有意思。"},
+ {q:"说说你学习汉语的方法。",en:"Talk about how you learn Chinese.",m:"我学习汉语有三个方法。第一，我每天早上用手机复习生词。第二，我每天跟老师上课，练习说话和听力。第三，我经常做考试的练习题。我觉得最难的是听力，因为说得太快我就听不懂。所以现在我每天都多听多说。"},
+ {q:"你喜欢运动吗？你经常做什么运动？",en:"Do you like sport? What sport do you often do?",m:"我非常喜欢运动。我是网球老师，所以我经常打网球。除了网球以外，我还喜欢骑自行车和游泳。运动让我的身体更健康，也让我的心情更好。我觉得每个人都应该多运动。"}
+];
+
+const store = {get(k,d){try{return JSON.parse(localStorage.getItem(k))??d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const hz = it => it.w.split("|").join("") + it.p;
+const PUNCT = /[\s，。？！、,.?!；;：:“”"'（）()…·]/g;
+const py = t => { try { return window.pinyinPro ? pinyinPro.pinyin(t) : "" } catch(e){ return "" } };
+const syl = c => { try { return window.pinyinPro ? pinyinPro.pinyin(c,{toneType:"none"}) : c } catch(e){ return c } };
+
+let cap = {tts:null, dict:null, sample:null};
+if (window.claude && claude.use) {
+  claude.use("tts").then(x=>cap.tts=x).catch(()=>{});
+  claude.use("dictation").then(x=>{cap.dict=x;showEngine()}).catch(()=>{});
+  claude.use("sample").then(x=>cap.sample=x).catch(()=>{});
+}
+const inFrame = (()=>{try{return window.self!==window.top}catch(e){return true}})();
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+let zhVoice = null;
+function pickVoice(){ const v = (window.speechSynthesis?.getVoices()||[]).filter(v=>/^zh(-|_)?(CN|Hans)?/i.test(v.lang)); zhVoice = v.find(x=>/CN/i.test(x.lang)) || v[0] || null; showEngine(); }
+if (window.speechSynthesis){ pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }
+
+function say(text, rate=1){
+  if (zhVoice){ speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(text); u.voice=zhVoice; u.lang=zhVoice.lang; u.rate=rate; speechSynthesis.speak(u); return; }
+  if (cap.tts){ cap.tts.speak(text,{language:"zh",rate:Math.max(.7,rate)}).catch(()=>{}); return; }
+  flash("No Chinese voice on this device. Install a Chinese text-to-speech voice in your phone settings.");
+}
+function micMode(){ if (inFrame && cap.dict) return "dict"; if (SR && !inFrame) return "native"; if (cap.dict) return "dict"; if (SR) return "native"; return "type"; }
+function showEngine(){ const m = micMode(); $("#engine").textContent = "Voice: " + (zhVoice? zhVoice.name : cap.tts? "Claude voice" : "none found") + " · Microphone: " + ({native:"phone speech recognition",dict:"Claude dictation",type:"not available here, type instead"})[m]; }
+
+let dictSink = null, dictWired = false;
+function makeRec(onText, continuous){
+  const mode = micMode(); let finalTxt = "", partial = "", stopFn = null, active = false;
+  const emit = () => onText(finalTxt + partial);
+  return {
+    mode,
+    start(){
+      finalTxt=""; partial=""; active = true;
+      if (mode==="native"){
+        const r = new SR(); r.lang="zh-CN"; r.interimResults=true; r.continuous=!!continuous;
+        r.onresult = e => { partial=""; for (let i=e.resultIndex;i<e.results.length;i++){ const t=e.results[i][0].transcript; if (e.results[i].isFinal) finalTxt+=t; else partial+=t; } emit(); };
+        r.onerror = e => { if (e.error==="not-allowed") flash("Microphone blocked. Allow it in the browser, or type your answer."); };
+        r.onend = () => { if (active && continuous) { try{ r.start() }catch(e){} } else { active=false; this.onend && this.onend(finalTxt+partial); } };
+        stopFn = () => { active=false; try{ r.stop() }catch(e){} };
+        try { r.start() } catch(e){ flash("Couldn't start the microphone."); }
+      } else if (mode==="dict"){
+        const d = cap.dict;
+        dictSink = {
+          partial: t => { partial=t; emit(); },
+          fin: t => { finalTxt+=t; partial=""; emit(); },
+          idle: () => { if(active){ active=false; this.onend && this.onend(finalTxt+partial); } }
+        };
+        if(!dictWired){ dictWired=true; d.onPartial(({text})=>dictSink&&dictSink.partial(text)); d.onFinal(({text})=>dictSink&&dictSink.fin(text)); d.onState(({state})=>{ if(state==="idle") dictSink&&dictSink.idle(); }); }
+        d.start().catch(()=>{ active=false; flash("Dictation was not allowed. Type your answer instead."); this.onend && this.onend(""); });
+        stopFn = () => d.stop().catch(()=>{});
+      }
+    },
+    stop(){ stopFn && stopFn(); },
+    onend:null
+  };
+}
+
+let flashT;
+function flash(msg){ let el=$("#flash"); if(!el){ el=document.createElement("div"); el.id="flash"; el.className="err"; $("#view").prepend(el);} el.textContent=msg; clearTimeout(flashT); flashT=setTimeout(()=>el.textContent="",6000); }
+
+function compare(target, said){
+  const a=[...target.replace(PUNCT,"")], b=[...said.replace(PUNCT,"")];
+  const n=a.length,m=b.length, L=Array.from({length:n+1},()=>new Array(m+1).fill(0));
+  const sylls = arr => { try { const r = pinyinPro.pinyin(arr.join(""),{type:"array",toneType:"none"}); if (r.length===arr.length) return r; } catch(e){} return arr.map(syl); };
+  const sa=sylls(a), sb=sylls(b);
+  const eq=(i,j)=> a[i]===b[j] ? 2 : (sa[i]===sb[j] ? 1 : 0);
+  for(let i=n-1;i>=0;i--)for(let j=m-1;j>=0;j--) L[i][j]= eq(i,j) ? 1+L[i+1][j+1] : Math.max(L[i+1][j],L[i][j+1]);
+  const out=[]; let i=0,j=0;
+  while(i<n){ if(j<m && eq(i,j) && L[i][j]===1+L[i+1][j+1]){ out.push({c:a[i],k:eq(i,j)===2?"g":"y"}); i++; j++; } else if(j<m && L[i][j+1]>=L[i+1][j]) j++; else { out.push({c:a[i],k:"r"}); i++; } }
+  const g=out.filter(x=>x.k==="g").length, y=out.filter(x=>x.k==="y").length;
+  return {out, pct: n? Math.round(100*(g+.5*y)/n) : 0};
+}
+const diffHTML = r => '<div class="diff">'+r.out.map(x=>`<span class="${x.k}">${esc(x.c)}</span>`).join("")+'</div>';
+const shuffle = a => { a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]} return a; };
+const mmss = s => Math.floor(s/60)+":"+String(s%60).padStart(2,"0");
+function bump(key, rating){ const s=store.get("st_"+key,{n:0,r:[]}); s.n++; s.r.push(rating); s.r=s.r.slice(-5); store.set("st_"+key,s); }
+
+/* ---------- Part 1: listen and repeat ---------- */
+let p1 = {round:0, idx:0, hints:0};
+function p1Order(){ const st=i=>{const s=store.get("st_p1_"+i,null); if(!s) return 1; const last=s.r[s.r.length-1]; return last==="again"?0:last==="good"?2:3;}; return P1.map((_,i)=>i).sort((x,y)=>st(x)-st(y)); }
+let p1Queue = p1Order();
+function renderP1(){
+  const k = p1Queue[p1.idx % p1Queue.length], it = P1[k], text = hz(it); p1.hints = 0;
+  $("#view").innerHTML = `<div class="card">
+   <div class="meta"><span>第一部分 · 听后重复</span><span>${(p1.idx%8)+1} / 8</span></div>
+   <div class="row" style="justify-content:center;gap:14px">
+     <button class="big pri" id="play" aria-label="Play">▶</button>
+     <button id="slow">慢 0.7×</button>
+   </div>
+   <div class="label">Stuck? Climb down one step at a time</div>
+   <div class="row"><button data-h="5">句型 pattern</button><button data-h="1">汉字</button><button data-h="2">拼音</button><button data-h="3">English</button><button data-h="4">拼句子 tiles</button></div>
+   <div class="reveal" id="rev"></div>
+   <div id="tilebox" class="hide"><div class="slot" id="slot"></div><div class="tiles" style="margin-top:8px" id="pool"></div><div class="row" style="margin-top:8px"><button id="tcheck">Check order</button><span id="tres" class="score"></span></div></div>
+   <div class="label">Your turn: say it</div>
+   <div class="row" style="justify-content:center"><button class="big mic" id="mic" aria-label="Speak">🎤</button></div>
+   <div class="said" id="said" style="text-align:center;margin-top:6px"></div>
+   <div class="row" style="margin-top:8px"><input type="text" id="typed" placeholder="或者打字 / or type" style="flex:1"><button id="tsub">Check</button></div>
+   <div id="result"></div>
+  </div>`;
+  const pyText = py(text);
+  $("#play").onclick=()=>say(text,1); $("#slow").onclick=()=>say(text,.7);
+  document.querySelectorAll("[data-h]").forEach(b=>b.onclick=()=>{
+    const h=+b.dataset.h; if(h<5) p1.hints=Math.max(p1.hints,h); b.disabled=true;
+    if(h===1) $("#rev").insertAdjacentHTML("beforeend",`<div class="hz">${esc(text)}</div>`);
+    if(h===2) $("#rev").insertAdjacentHTML("beforeend",`<div class="py">${esc(pyText||"(pinyin unavailable)")}</div>`);
+    if(h===3) $("#rev").insertAdjacentHTML("beforeend",`<div class="en">${esc(it.en)}</div>`);
+    if(h===4) buildTiles(it);
+    if(h===5) $("#rev").insertAdjacentHTML("beforeend",`<div class="pill" style="font-size:14px">${esc(it.g||"")}</div>`);
+  });
+  const check = said => {
+    const r = compare(text, said);
+    const verdict = r.pct>=90?"很好！":r.pct>=70?"差不多了 · almost":"再听一次 · listen again";
+    $("#result").innerHTML = `<div class="label">Target</div>${diffHTML(r)}<div class="py">${esc(pyText)}</div>
+      <div class="score"><span class="pill">${r.pct}%</span> ${verdict}</div>
+      <div class="note">Green: right · orange: right sound, other character (often a tone slip or the recogniser's guess) · red: missing.</div>
+      <div class="row" style="margin-top:8px"><button id="again2">▶ Hear it again</button></div>
+      <div class="rate"><button data-r="again">再来 Again</button><button data-r="good">好 Good</button><button data-r="easy">容易 Easy</button></div>`;
+    $("#again2").onclick=()=>say(text,1);
+    document.querySelectorAll("[data-r]").forEach(b=>b.onclick=()=>{ bump("p1_"+k,b.dataset.r); p1.idx++; if(p1.idx%p1Queue.length===0) p1Queue=p1Order(); renderP1(); setTimeout(()=>say(hz(P1[p1Queue[p1.idx%p1Queue.length]])),250); });
+  };
+  wireMic(check, false);
+  $("#tsub").onclick=()=>{ const v=$("#typed").value.trim(); if(!v){flash("Type your answer first.");return;} check(v); };
+}
+function buildTiles(it){
+  const words = it.w.split("|").filter(w=>w!=="，"), pool=$("#pool"), slot=$("#slot"); $("#tilebox").classList.remove("hide");
+  shuffle(words.map((w,i)=>({w,i}))).forEach(o=>{ const t=document.createElement("span"); t.className="tile"; t.textContent=o.w; t.onclick=()=>{ t.classList.add("used"); const s=document.createElement("span"); s.className="tile"; s.textContent=o.w; s.onclick=()=>{s.remove();t.classList.remove("used")}; slot.appendChild(s); }; pool.appendChild(t); });
+  $("#tcheck").onclick=()=>{ const got=[...slot.children].map(x=>x.textContent).join(""); const ok = got===words.join(""); $("#tres").innerHTML = ok? '<span class="g">✓ Right order. Now say it out loud.</span>' : '<span class="r">Not yet. Tap a tile to take it back.</span>'; };
+}
+function wireMic(onDone, continuous, onStart){
+  const btn=$("#mic"); if(!btn) return null;
+  const mode=micMode(); if(mode==="type"){ btn.disabled=true; btn.title="No microphone here"; return null; }
+  let rec=null;
+  btn.onclick=()=>{
+    if(rec){ rec.stop(); return; }
+    rec = makeRec(t=>{ $("#said").textContent=t; }, continuous);
+    rec.onend = t => { btn.classList.remove("rec"); rec=null; clearInterval(tick); if(t.trim()) onDone(t.trim()); else $("#said").textContent="(nothing heard, tap the mic and try again)"; };
+    btn.classList.add("rec"); $("#said").textContent="…"; rec.start(); onStart && onStart();
+  };
+  return { stop(){ rec && rec.stop(); } };
+}
+
+/* ---------- AI teacher ---------- */
+async function teacher(task, answer, model){
+  if(!cap.sample) return null;
+  const prompt = `You are a warm, precise Mandarin teacher preparing an adult learner (native German) for the HSK 3 (3.0) speaking test.
+Task given to the learner: ${task}
+Learner's spoken answer (speech-recognition transcript, may contain recogniser errors; homophones are probably recognition errors, not learner errors): "${answer}"
+Reference answer: "${model}"
+Reply ONLY with JSON: {"score": integer 0-10 (HSK3 standard: task done, grammar, vocabulary, length), "praise": short English sentence, "fixes": [{"wrong": learner fragment, "right": corrected Chinese, "why": short English reason}] (max 4, most important first, focus on 了, 不/没, word order time-place-verb, measure words), "better": the learner's own answer rewritten as natural HSK 1-3 Chinese keeping his ideas, "better_pinyin": pinyin with tone marks for "better", "next": one concrete English tip for the next attempt}`;
+  try { return await cap.sample.json(prompt,{modelTier:"default"}); } catch(e){ return {error: e.code||"error"}; }
+}
+function renderFeedback(el, fb){
+  if(!fb){ el.innerHTML = '<div class="note">Compare your answer with the model answer below, then say the model answer out loud once.</div>'; return; }
+  if(fb.error){ el.innerHTML = `<div class="err">Feedback unavailable (${esc(fb.error)}).</div>`; return; }
+  el.innerHTML = `<div class="fb"><div><span class="pill">${esc(fb.score)}/10</span> ${esc(fb.praise||"")}</div>
+   ${(fb.fixes||[]).map(f=>`<div style="margin-top:8px"><span class="r">${esc(f.wrong)}</span> → <span class="g">${esc(f.right)}</span><div class="en">${esc(f.why)}</div></div>`).join("")}
+   <div class="label">Your answer, polished</div><div class="hz">${esc(fb.better||"")}</div><div class="py">${esc(fb.better_pinyin||"")}</div>
+   <div class="row" style="margin-top:6px"><button id="sayBetter">▶ Hear it</button></div>
+   <div class="label">Next time</div><div>${esc(fb.next||"")}</div></div>`;
+  $("#sayBetter").onclick=()=>say(fb.better||"",.9);
+}
+
+/* ---------- timers ---------- */
+let tick=null;
+function countdown(el, secs, done, hotAt=5){ clearInterval(tick); let s=secs; const draw=()=>{ el.textContent=mmss(s); el.classList.toggle("hot", s<=hotAt); }; draw(); tick=setInterval(()=>{ s--; draw(); if(s<=0){ clearInterval(tick); done&&done(); } },1000); return ()=>{ clearInterval(tick); }; }
+
+/* ---------- Part 2: describe a picture ---------- */
+let p2i = 0;
+function renderP2(){
+  const it=P2[p2i%P2.length];
+  $("#view").innerHTML = `<div class="card">
+    <div class="meta"><span>第二部分 · 看图说话 · say who, what, and how they feel</span><span>${(p2i%P2.length)+1} / ${P2.length}</span></div>
+    <div class="scene">${it.scene}</div>
+    <div class="note" style="text-align:center">Prototype picture. Real images come with the website version.</div>
+    <div class="row" style="margin-top:10px"><button data-h="kw">Key word</button><button data-h="frame">Sentence frame</button></div>
+    <div class="reveal" id="rev"></div>
+    <div class="timer" id="tm">0:15</div>
+    <div class="row" style="justify-content:center"><button class="pri" id="go">Start: 10 s look, 15 s speak</button></div>
+    <div class="row hide" style="justify-content:center" id="microw"><button class="big mic" id="mic" aria-label="Speak">🎤</button></div>
+    <div class="said" id="said" style="text-align:center;margin-top:6px"></div>
+    <div class="row" style="margin-top:8px"><input type="text" id="typed" placeholder="或者打字 / or type" style="flex:1"><button id="tsub">Check</button></div>
+    <div id="result"></div>
+  </div>`;
+  document.querySelectorAll("[data-h]").forEach(b=>b.onclick=()=>{ b.disabled=true;
+    if(b.dataset.h==="kw") $("#rev").insertAdjacentHTML("beforeend",`<div class="hz">${esc(it.kw)}</div><div class="py">${esc(py(it.kw))}</div>`);
+    else $("#rev").insertAdjacentHTML("beforeend",`<div class="frame">谁 + 在哪儿 + 正在/在 + 做什么 (+ 怎么样)<br>今天天气很好，一个男人在公园里骑自行车。</div>`); });
+  const finish = said => showP2Result(it, said);
+  const mic = wireMic(finish, true, ()=>countdown($("#tm"),15,()=>{ if(mic) mic.stop(); }));
+  $("#go").onclick=()=>{
+    $("#go").disabled=true; $("#said").textContent="Look at the picture…";
+    countdown($("#tm"),10,()=>{ $("#microw").classList.remove("hide"); $("#tm").textContent="0:15"; $("#said").textContent="Tap the mic and speak (15 s)"; }, 3);
+  };
+  $("#tsub").onclick=()=>{ const v=$("#typed").value.trim(); if(!v){flash("Type your answer first.");return;} clearInterval(tick); finish(v); };
+}
+function showP2Result(it, said){
+  const n = said.replace(PUNCT,"").length, hasKw = said.includes(it.kw);
+  $("#result").innerHTML = `<div class="label">Quick check</div>
+    <div class="score"><span class="pill">${n} characters</span> ${n>=10?"Good length for 15 s.":"Aim for at least 10–15 characters (one full sentence)."} ${hasKw?'<span class="g">Key word used.</span>':""}</div>
+    <div id="fb"><div class="note">Teacher is reading your answer…</div></div>
+    <div class="label">Model answer</div><div class="hz">${esc(it.m[0])}</div><div class="py">${esc(py(it.m[0]))}</div><div class="en">${esc(it.en)}</div>
+    <div class="row" style="margin-top:6px"><button id="sayM">▶ Hear it</button><button id="next">Next picture →</button></div>`;
+  $("#sayM").onclick=()=>say(it.m[0],.9);
+  $("#next").onclick=()=>{ bump("p2_"+(p2i%P2.length),"done"); p2i++; renderP2(); };
+  teacher("Describe the picture ("+it.en+") in about 15 seconds.", said, it.m[0]).then(fb=>renderFeedback($("#fb"),fb));
+}
+
+/* ---------- Part 3: answer a question ---------- */
+let p3i = 0;
+function renderP3(){
+  const it=P3[p3i%P3.length];
+  $("#view").innerHTML = `<div class="card">
+    <div class="meta"><span>第三部分 · 回答问题</span><span>${(p3i%P3.length)+1} / ${P3.length}</span></div>
+    <div class="hz">${esc(it.q)}</div>
+    <div class="row" style="margin-top:8px"><button id="playQ">▶ Hear question</button><button data-h="py">拼音</button><button data-h="en">English</button></div>
+    <div class="reveal" id="rev"></div>
+    <div class="frame">Frame: 回答 answer → 原因 reason (因为…) → 例子 example (比如…) → 结尾 close (所以 / 总的来说…)</div>
+    <div class="label">Preparation (exam: up to 7 minutes) · write key words</div>
+    <textarea id="notes" placeholder="成都 · 热情 · 辣 · 骑车 · 春节"></textarea>
+    <div class="timer" id="tm">7:00</div>
+    <div class="row" style="justify-content:center"><button id="prep">Start prep</button></div>
+    <div class="label" style="text-align:center">Tap the mic to start your 1:30 answer</div>
+    <div class="row" style="justify-content:center" id="microw"><button class="big mic" id="mic" aria-label="Speak">🎤</button></div>
+    <div class="said" id="said" style="margin-top:6px"></div>
+    <div class="row" style="margin-top:8px"><input type="text" id="typed" placeholder="或者打字 / or type" style="flex:1"><button id="tsub">Check</button></div>
+    <div id="result"></div>
+  </div>`;
+  $("#playQ").onclick=()=>say(it.q,.9);
+  document.querySelectorAll("[data-h]").forEach(b=>b.onclick=()=>{ b.disabled=true; $("#rev").insertAdjacentHTML("beforeend", b.dataset.h==="py"?`<div class="py">${esc(py(it.q))}</div>`:`<div class="en">${esc(it.en)}</div>`); });
+  let start=0;
+  const finish = said => { const secs = start? Math.round((Date.now()-start)/1000):0; showP3Result(it, said, secs); };
+  const mic = wireMic(finish, true, ()=>{ $("#prep").disabled=true; start=Date.now(); countdown($("#tm"),90,()=>{ if(mic) mic.stop(); },10); });
+  $("#prep").onclick=()=>{ $("#prep").disabled=true; countdown($("#tm"),420,()=>{ $("#said").textContent="Prep time is over. Tap the mic and answer."; },30); };
+  $("#tsub").onclick=()=>{ const v=$("#typed").value.trim(); if(!v){flash("Type your answer first.");return;} clearInterval(tick); finish(v); };
+}
+function showP3Result(it, said, secs){
+  clearInterval(tick);
+  const n = said.replace(PUNCT,"").length;
+  $("#result").innerHTML = `<div class="label">Quick check</div>
+    <div class="score"><span class="pill">${n} characters</span> ${secs?`<span class="pill">${mmss(secs)} spoken</span>`:""} ${n>=120?"Good length for 1.5 minutes.":"For 1.5 minutes aim for about 120–200 characters: add a reason and an example."}</div>
+    <div id="fb"><div class="note">Teacher is reading your answer…</div></div>
+    <div class="label">Model answer</div><div class="hz" style="font-size:19px">${esc(it.m)}</div><div class="py">${esc(py(it.m))}</div>
+    <div class="row" style="margin-top:6px"><button id="sayM">▶ Hear it</button><button id="next">Next question →</button></div>`;
+  $("#sayM").onclick=()=>say(it.m,.9);
+  $("#next").onclick=()=>{ bump("p3_"+(p3i%P3.length),"done"); p3i++; renderP3(); };
+  teacher(`Answer the question "${it.q}" (${it.en}) for about 1.5 minutes.`, said, it.m).then(fb=>renderFeedback($("#fb"),fb));
+}
+
+/* ---------- tabs ---------- */
+let part = 1;
+function render(){ clearInterval(tick); try{speechSynthesis.cancel()}catch(e){} document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("on",+t.dataset.p===part)); ({1:renderP1,2:renderP2,3:renderP3})[part](); showEngine(); }
+document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{ part=+t.dataset.p; render(); });
+render();
+</script>
+</body>
+</html>
