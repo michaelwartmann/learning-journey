@@ -1,0 +1,16 @@
+{
+  "id": "shengri-kuaile",
+  "title": "祝你生日快乐",
+  "english": "Happy Birthday to You",
+  "about": "The same tune as the English song (Hill sisters, 1893), sung with one line four times: zhù nǐ shēngrì kuàilè, \"I wish you a happy birthday\". In the third line 乐 is stretched over two notes.",
+  "key": "F",
+  "time": "3/4",
+  "tempo": 96,
+  "lyricsFrom": "song",
+  "lines": [
+    { "notes": "5,/ 5,/ | 6, 5, 1 | 7,-", "lyrics": "祝你生日快乐", "en": "Happy birthday to you" },
+    { "notes": "5,/ 5,/ | 6, 5, 2 | 1-", "lyrics": "祝你生日快乐", "en": "Happy birthday to you" },
+    { "notes": "5,/ 5,/ | 5 3 1 | 7, 6,", "lyrics": "祝你生日快乐_", "en": "Happy birthday, dear …" },
+    { "notes": "4/ 4/ | 3 1 2 | 1-- ||", "lyrics": "祝你生日快乐", "en": "Happy birthday to you" }
+  ]
+}

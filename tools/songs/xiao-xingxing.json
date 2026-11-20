@@ -1,0 +1,19 @@
+{
+  "id": "xiao-xingxing",
+  "title": "小星星",
+  "english": "Little Star (Twinkle, Twinkle)",
+  "about": "The French tune \"Ah ! vous dirai-je, maman\" (18th century), the one Mozart wrote variations on. Chinese children sing it with six lines of seven characters, one character per note. Homework from Monika, 10 Nov 2026.",
+  "key": "C",
+  "time": "4/4",
+  "tempo": 92,
+  "lyricsFrom": "you",
+  "lyricsHint": "Paste the Chinese lyrics from the video or from Monika: 6 lines of 7 characters (42 in all). Punctuation and spaces are ignored.",
+  "lines": [
+    { "notes": "1 1 5 5 | 6 6 5- |" },
+    { "notes": "4 4 3 3 | 2 2 1- |" },
+    { "notes": "5 5 4 4 | 3 3 2- |" },
+    { "notes": "5 5 4 4 | 3 3 2- |" },
+    { "notes": "1 1 5 5 | 6 6 5- |" },
+    { "notes": "4 4 3 3 | 2 2 1- ||" }
+  ]
+}

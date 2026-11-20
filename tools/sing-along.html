@@ -1,0 +1,527 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#B8322A">
+<link rel="manifest" href="../manifest.webmanifest">
+<link rel="icon" type="image/png" href="../icons/favicon-64.png">
+<link rel="apple-touch-icon" href="../icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="一步一步">
+<title>唱歌 · Sing-along</title>
+<link rel="stylesheet" href="../fonts/fonts.css">
+<style>
+:root{
+  --paper:#F3F4EF; --sheet:#FFFFFF; --ink:#1B2430; --muted:#5E6670; --rule:#D9DCD3;
+  --seal:#B4232F; --seal-soft:#F6E3E4; --jade:#2C7A55; --jade-soft:#E1F0E8; --amber:#B8661E; --amber-soft:#F7EADB;
+  --t1:#D11F1F; --t2:#1E8A2E; --t3:#1F3FD1; --t4:#8A1FB8; --t5:#777;
+  --hanzi:'Noto Serif SC','Songti SC','SimSun',serif;
+  --ui:'Noto Sans SC','PingFang SC','Microsoft YaHei',system-ui,sans-serif;
+  --mono:'IBM Plex Mono',ui-monospace,'SF Mono',Menlo,monospace;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--ui);font-size:15px;line-height:1.55;padding:0 14px 120px}
+.wrap{max-width:860px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+header{padding-top:24px;display:flex;flex-direction:column;gap:6px}
+header a.back{font-size:13px;color:var(--muted);text-decoration:none}
+h1{font-family:var(--hanzi);font-weight:900;font-size:clamp(28px,6vw,40px);line-height:1.15;margin:0}
+.lede{color:var(--muted);margin:0;max-width:62ch}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{font:inherit;font-weight:500;border:1px solid var(--rule);background:var(--sheet);color:var(--ink);padding:7px 13px;border-radius:999px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.chip .zh{font-family:var(--hanzi);font-weight:700;margin-right:6px}
+.card{background:var(--sheet);border:1px solid var(--rule);border-radius:14px;padding:16px 18px;display:flex;flex-direction:column;gap:12px}
+.songhead h2{font-family:var(--hanzi);font-size:28px;margin:0;line-height:1.2}
+.songhead .py{font-size:15px;margin:0}
+.songhead .en{color:var(--muted);margin:0}
+.meta{font-family:var(--mono);font-size:12px;color:var(--seal)}
+.about{font-size:14px;color:var(--muted);margin:0}
+.lbl{font-family:var(--mono);font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:0}
+.btn{font:inherit;font-weight:600;border:1px solid var(--ink);background:var(--ink);color:var(--paper);padding:8px 14px;border-radius:8px;cursor:pointer}
+.btn.ghost{background:transparent;color:var(--ink);border-color:var(--rule)}
+.btn.small{padding:4px 10px;font-size:13px;font-weight:500}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+textarea{font-family:var(--hanzi);font-size:18px;width:100%;min-height:150px;border:1px solid var(--rule);border-radius:10px;padding:10px;resize:vertical}
+.warn{background:var(--amber-soft);border-radius:10px;padding:10px 12px;font-size:14px}
+
+/* jianpu + lyrics */
+.line{display:flex;flex-direction:column;gap:4px;padding:10px 0;border-top:1px solid var(--rule)}
+.line:first-child{border-top:0}
+.line.looping{background:var(--amber-soft);border-radius:10px;padding:10px 8px}
+.ltools{display:flex;gap:6px;align-items:center}
+.ltools .no{font-family:var(--mono);font-size:12px;color:var(--muted);min-width:2ch}
+.ltools .gloss{font-size:13px;color:var(--muted);margin-left:4px}
+.cells{display:flex;flex-wrap:wrap;align-items:flex-start;row-gap:10px}
+.grp{display:flex;flex-wrap:nowrap;align-items:flex-start}
+.c{display:flex;flex-direction:column;align-items:center;min-width:38px;padding:2px 1px;border-radius:8px;cursor:pointer;user-select:none}
+.c.bar{min-width:14px;cursor:default}
+.c.on{background:var(--seal-soft)}
+.c.on .hz{color:var(--seal)}
+.jp{display:flex;flex-direction:column;align-items:center;font-family:var(--mono);font-size:21px;font-weight:600;line-height:1;height:46px;justify-content:flex-start}
+.jp .dots{height:7px;font-size:9px;line-height:7px;letter-spacing:1px}
+.jp .num{position:relative;padding:1px 4px 3px}
+.jp .num.u1{border-bottom:2px solid var(--ink)}
+.jp .num.u2{border-bottom:2px solid var(--ink);box-shadow:0 4px 0 -2px var(--sheet),0 5px 0 -1px var(--ink)}
+.jp .num .dot{position:absolute;right:-5px;top:0}
+.jp.barl{font-weight:300;color:var(--muted);font-size:24px}
+.py{font-size:14px;min-height:20px;white-space:nowrap}
+.hz{font-family:var(--hanzi);font-size:24px;line-height:1.2;min-height:30px}
+.hold{color:var(--muted)}
+.tones .t1{color:var(--t1)} .tones .t2{color:var(--t2)} .tones .t3{color:var(--t3)} .tones .t4{color:var(--t4)} .tones .t5{color:var(--t5)}
+.hide-jp .jp,.hide-py .py,.hide-hz .hz{display:none}
+.hide-jp .c.bar{display:none}
+
+/* staff */
+#staff svg{max-width:100%}
+#staff .abcjs-note.on, #staff .abcjs-rest.on{fill:var(--seal);color:var(--seal)}
+#staff .abcjs-lyric.on{fill:var(--seal)}
+
+/* player bar */
+.player{position:fixed;left:0;right:0;bottom:0;background:var(--sheet);border-top:1px solid var(--rule);padding:10px 14px calc(10px + env(safe-area-inset-bottom));z-index:5}
+.player .in{max-width:860px;margin:0 auto;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.player label{font-size:13px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.player input[type=range]{width:110px}
+.player .sp{font-family:var(--mono);font-size:12px;min-width:4ch}
+
+details{background:var(--sheet);border:1px solid var(--rule);border-radius:14px;padding:12px 18px}
+details summary{cursor:pointer;font-weight:600}
+details p,details li{font-size:14px}
+.ex{font-family:var(--mono);font-size:18px;background:var(--paper);border-radius:8px;padding:6px 10px;display:inline-block}
+.note{font-size:13px;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <a class="back" href="../resources.html">‹ Resources</a>
+  <h1>唱歌 · Sing-along</h1>
+  <p class="lede">Chinese songs with characters, pinyin, jianpu (the number notation Chinese songbooks use) and staff notation. Press play: the melody runs at the speed you choose and each character lights up when it's time to sing it.</p>
+</header>
+
+<nav class="chips" id="songs" aria-label="Songs"></nav>
+
+<section class="card" id="song"></section>
+
+<section class="card">
+  <div class="row" style="justify-content:space-between">
+    <p class="lbl">Show</p>
+  </div>
+  <div class="chips" id="view"></div>
+</section>
+
+<section class="card" id="sheet"></section>
+
+<section class="card" id="staffcard">
+  <p class="lbl">五线谱 · staff notation</p>
+  <div id="staff"></div>
+</section>
+
+<details id="jpinfo">
+  <summary>What is jianpu 简谱?</summary>
+  <p>简谱 jiǎnpǔ, "simple notation", is how most people in China read music: in school songbooks, karaoke sheets and church hymnals. Instead of notes on five lines, it writes the steps of the scale as numbers.</p>
+  <ul>
+    <li><b>1 2 3 4 5 6 7</b> = do re mi fa sol la ti. You sing "do" for 1, or the number itself: yāo/yī, èr, sān…</li>
+    <li><b>1 = F</b> at the top says which key "do" is. Change it and the same numbers sing higher or lower.</li>
+    <li><b>A dot above</b> a number = one octave higher, <b>a dot below</b> = one octave lower.</li>
+    <li><b>A plain number</b> lasts one beat. <b>Underlined</b> = half a beat, <b>two lines</b> = a quarter beat.</li>
+    <li><b>–</b> after a note holds it one more beat. <b>A dot after</b> a number makes it half as long again.</li>
+    <li><b>0</b> is a rest, <b>|</b> a bar line.</li>
+  </ul>
+  <p>So the start of "Twinkle, Twinkle" is <span class="ex">1 1 5 5 | 6 6 5 –</span> in China, and every Chinese friend can sing it from that line.</p>
+</details>
+
+<p class="note">Melodies and the birthday words are traditional. For songs that are still under copyright the page keeps only the tune or nothing, and you paste the words yourself; they are saved only on your device. Pinyin: pinyin-pro (MIT). Staff notation: abcjs (MIT).</p>
+</div>
+
+<div class="player">
+  <div class="in">
+    <button class="btn" id="play">▶ Play</button>
+    <button class="btn ghost" id="stop">■</button>
+    <label>Speed <input type="range" id="speed" min="40" max="120" step="5" value="75"><span class="sp" id="spv">75%</span></label>
+    <label><input type="checkbox" id="melody" checked> melody</label>
+    <label><input type="checkbox" id="countin" checked> count-in</label>
+  </div>
+</div>
+
+<script src="../vendor/pinyin-pro.js"></script>
+<script src="../vendor/abcjs-basic-min.js"></script>
+<script>
+"use strict";
+const $ = s => document.querySelector(s);
+const store = {
+  get(k, d){ try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch(e){ return d; } },
+  set(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
+};
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"})[c]);
+
+/* ---------- keys and pitches ---------- */
+const LETTERS = ["C","D","E","F","G","A","B"];
+const NATURAL = {C:0,D:2,E:4,F:5,G:7,A:9,B:11};
+const MAJOR = [0,2,4,5,7,9,11];
+function keyInfo(k){
+  const m = /^([A-G])(b|#)?$/.exec(k) || ["","C",""];
+  const letter = m[1], acc = m[2] === "b" ? -1 : m[2] === "#" ? 1 : 0;
+  // tonic around F4..E5 is too high for low keys; keep tonic in octave 4 (C4..B4)
+  return { letter, li: LETTERS.indexOf(letter), midi: 60 + NATURAL[letter] + acc, name: letter + (acc < 0 ? "♭" : acc > 0 ? "♯" : ""), abc: letter + (m[2] || "") };
+}
+
+/* ---------- parse a line of jianpu tokens ---------- */
+function parseNotes(str){
+  const out = [];
+  for (const tok of str.trim().split(/\s+/)){
+    if (!tok) continue;
+    if (tok === "|" || tok === "||"){ out.push({ bar: tok }); continue; }
+    const m = /^([0-7])([',]*)(\/{0,2})(\.?)(-*)$/.exec(tok);
+    if (!m){ console.warn("bad note", tok); continue; }
+    const deg = +m[1];
+    const oct = (m[2].match(/'/g) || []).length - (m[2].match(/,/g) || []).length;
+    const sub = m[3].length;                     // 0 quarter, 1 eighth, 2 sixteenth
+    let beats = 1 / Math.pow(2, sub);
+    if (m[4]) beats *= 1.5;
+    const holds = m[5].length;
+    beats += holds;
+    out.push({ deg, oct, sub, dotted: !!m[4], holds, beats });
+  }
+  return out;
+}
+
+/* ---------- state ---------- */
+let SONGS = [], song = null, model = null;
+const view = Object.assign({ jp:true, staff:true, py:true, hz:true, tones:true }, store.get("sing-view", {}));
+
+/* ---------- build the song model ---------- */
+function userLyrics(id){ return store.get("sing-lyrics-" + id, ""); }
+function hanOnly(t){ return Array.from(t.replace(/[^\p{Script=Han}]/gu, "")); }
+
+function buildModel(s){
+  const k = keyInfo(s.key || "C");
+  const lines = s.lines.map(l => ({ en: l.en || "", toks: parseNotes(l.notes) }));
+  // lyrics per line
+  let pool = null;
+  if (s.lyricsFrom === "you") pool = hanOnly(userLyrics(s.id));
+  let poolUsed = 0;
+  lines.forEach((L, li) => {
+    const sung = L.toks.filter(t => !t.bar && t.deg > 0);
+    let chars;
+    if (pool) { chars = pool.slice(poolUsed, poolUsed + sung.length); poolUsed += sung.length; }
+    else chars = Array.from((s.lines[li].lyrics || "").replace(/[^\p{Script=Han}_]/gu, ""));
+    // pinyin for the real characters of the line, with tone sandhi for 一 / 不
+    const real = chars.filter(c => c !== "_");
+    let pys = [], tones = [];
+    try {
+      if (window.pinyinPro && real.length){
+        pys = pinyinPro.pinyin(real.join(""), { type:"array" });
+        tones = pinyinPro.pinyin(real.join(""), { type:"array", pattern:"num" }).map(Number);
+        // in songs 一 keeps its full tone (一闪一闪 = yì shǎn yì shǎn), never the light "yi" of 看一看
+        real.forEach((c, j) => {
+          if (c === "一" && tones[j] === 0 && j < real.length - 1){
+            const nx = tones[j + 1] || 1;
+            pys[j] = nx === 4 ? "yí" : "yì"; tones[j] = nx === 4 ? 2 : 4;
+          }
+        });
+      }
+    } catch(e){}
+    let ri = 0, ci = 0;
+    sung.forEach(t => {
+      const c = chars[ci++];
+      if (c === undefined){ t.hz = ""; t.py = ""; return; }
+      if (c === "_"){ t.hold = true; t.hz = ""; t.py = ""; return; }
+      t.hz = c; t.py = pys[ri] || ""; t.tone = tones[ri] || 5; ri++;
+    });
+    L.text = real.join("");
+  });
+  // timeline
+  let beat = 0, idx = 0;
+  const events = [];
+  lines.forEach((L, li) => {
+    L.start = beat;
+    L.toks.forEach(t => {
+      if (t.bar) return;
+      t.i = idx++; t.line = li; t.start = beat;
+      t.midi = t.deg ? k.midi + MAJOR[t.deg - 1] + 12 * t.oct : null;
+      // abc letter + octave
+      if (t.deg){
+        const abs = 4 * 7 + k.li + (t.deg - 1) + 7 * t.oct;
+        t.abcLetter = LETTERS[abs % 7]; t.abcOct = Math.floor(abs / 7);
+      }
+      events.push(t);
+      beat += t.beats;
+    });
+    L.end = beat;
+  });
+  const [bpb, unit] = (s.time || "4/4").split("/").map(Number);
+  const needed = pool ? lines.reduce((n, L) => n + L.toks.filter(t => !t.bar && t.deg > 0).length, 0) : 0;
+  return { key: k, lines, events, total: beat, bpb, unit, pool, needed };
+}
+
+/* ---------- song list ---------- */
+async function loadSongs(){
+  try {
+    const idx = await (await fetch("songs/index.json")).json();
+    SONGS = await Promise.all(idx.songs.map(async e => (await fetch("songs/" + e.file)).json()));
+  } catch(e){
+    $("#song").innerHTML = '<p class="warn">Could not load the songs. Open this page from the website, not as a file.</p>';
+    return;
+  }
+  const want = (location.hash.match(/song=([\w-]+)/) || [])[1] || store.get("sing-last", SONGS[0].id);
+  renderChips();
+  pick(SONGS.find(s => s.id === want) ? want : SONGS[0].id);
+}
+function renderChips(){
+  $("#songs").innerHTML = SONGS.map(s =>
+    `<button class="chip" data-id="${esc(s.id)}" aria-pressed="${song && song.id === s.id}"><span class="zh">${esc(s.title)}</span>${esc(s.english)}</button>`).join("");
+  $("#songs").querySelectorAll(".chip").forEach(b => b.onclick = () => pick(b.dataset.id));
+}
+function pick(id){
+  stop();
+  song = SONGS.find(s => s.id === id);
+  store.set("sing-last", id);
+  history.replaceState(null, "", "#song=" + id);
+  renderChips();
+  render();
+}
+
+/* ---------- render ---------- */
+function render(){
+  model = buildModel(song);
+  const titlePy = (() => { try { return pinyinPro.pinyin(song.title); } catch(e){ return ""; } })();
+  const missing = model.pool && model.pool.length === 0;
+  let html = `<div class="songhead"><h2>${esc(song.title)}</h2><p class="py">${esc(titlePy)}</p><p class="en">${esc(song.english)}</p></div>
+    <p class="meta">1 = ${model.key.name} · ${esc(song.time)} · ♩ = ${song.tempo}</p>
+    <p class="about">${esc(song.about || "")}</p>`;
+  if (song.lyricsFrom === "you"){
+    const have = model.pool.length, need = model.needed;
+    if (missing){
+      html += `<div id="paste"><p class="lbl">Lyrics</p><p class="about">${esc(song.lyricsHint || "Paste the Chinese lyrics.")}</p>
+        <textarea id="lyr" placeholder="Paste here"></textarea>
+        <div class="row"><button class="btn" id="savelyr">Use these lyrics</button><span class="note">Saved on this device only.</span></div></div>`;
+    } else {
+      if (have !== need) html += `<p class="warn">The lyrics have ${have} characters, the melody has ${need} notes. Check for a missing or extra character.</p>`;
+      html += `<div class="row"><button class="btn ghost small" id="editlyr">Edit lyrics</button></div>`;
+    }
+  }
+  $("#song").innerHTML = html;
+  const sv = $("#savelyr"); if (sv) sv.onclick = () => { store.set("sing-lyrics-" + song.id, $("#lyr").value); render(); };
+  const ed = $("#editlyr"); if (ed) ed.onclick = () => {
+    const cur = userLyrics(song.id);
+    $("#song").insertAdjacentHTML("beforeend", `<div><textarea id="lyr">${esc(cur)}</textarea>
+      <div class="row"><button class="btn" id="savelyr2">Save</button><button class="btn ghost" id="clrlyr">Clear</button></div></div>`);
+    ed.remove();
+    $("#savelyr2").onclick = () => { store.set("sing-lyrics-" + song.id, $("#lyr").value); render(); };
+    $("#clrlyr").onclick = () => { store.set("sing-lyrics-" + song.id, ""); render(); };
+  };
+  renderView();
+  renderSheet();
+  renderStaff();
+}
+
+function renderView(){
+  const opts = [["jp","简谱 jianpu"],["staff","五线谱 staff"],["py","拼音 pinyin"],["hz","汉字 Hanzi"],["tones","tone colours"]];
+  $("#view").innerHTML = opts.map(([k, l]) => `<button class="chip" data-k="${k}" aria-pressed="${!!view[k]}">${l}</button>`).join("");
+  $("#view").querySelectorAll(".chip").forEach(b => b.onclick = () => { view[b.dataset.k] = !view[b.dataset.k]; store.set("sing-view", view); renderView(); applyView(); });
+  applyView();
+}
+function applyView(){
+  const sh = $("#sheet");
+  sh.classList.toggle("hide-jp", !view.jp);
+  sh.classList.toggle("hide-py", !view.py);
+  sh.classList.toggle("hide-hz", !view.hz);
+  sh.classList.toggle("tones", !!view.tones);
+  $("#staffcard").hidden = !view.staff;
+  $("#jpinfo").hidden = !view.jp;
+}
+
+function jpCell(t){
+  if (t.deg === 0) return `<div class="jp"><span class="dots"></span><span class="num${t.sub ? " u" + t.sub : ""}">0${t.dotted ? '<span class="dot">·</span>' : ""}</span></div>`;
+  const up = t.oct > 0 ? "•".repeat(t.oct) : "", dn = t.oct < 0 ? "•".repeat(-t.oct) : "";
+  return `<div class="jp"><span class="dots">${up}</span><span class="num${t.sub ? " u" + t.sub : ""}">${t.deg}${t.dotted ? '<span class="dot">·</span>' : ""}</span><span class="dots">${dn}</span></div>`;
+}
+function renderSheet(){
+  const sh = $("#sheet");
+  sh.innerHTML = `<p class="lbl">歌词 · lyrics and 简谱 · 1 = ${model.key.name} &nbsp; ${esc(song.time)}</p>` + model.lines.map((L, li) => {
+    // one group per bar, the bar line glued to its end, so a line never wraps in the middle of a bar
+    let groups = [[]];
+    L.toks.forEach(t => { groups[groups.length - 1].push(t); if (t.bar) groups.push([]); });
+    groups = groups.filter(g => g.length);
+    const cells = groups.map(g => `<div class="grp">` + g.map(t => {
+      if (t.bar) return `<div class="c bar"><div class="jp barl">${t.bar === "||" ? "‖" : "|"}</div></div>`;
+      let s = `<div class="c" data-i="${t.i}">${jpCell(t)}<div class="py t${t.tone || 5}">${t.hold ? '<span class="hold">~</span>' : esc(t.py || "")}</div><div class="hz">${t.hold ? '<span class="hold">–</span>' : esc(t.hz || "")}</div></div>`;
+      for (let h = 0; h < t.holds; h++) s += `<div class="c hold" data-i="${t.i}"><div class="jp"><span class="dots"></span><span class="num">–</span></div><div class="py"></div><div class="hz"></div></div>`;
+      return s;
+    }).join("") + `</div>`).join("");
+    return `<div class="line" data-l="${li}">
+      <div class="ltools"><span class="no">${li + 1}</span>
+        <button class="btn ghost small" data-act="play" title="Play this line">▶</button>
+        <button class="btn ghost small" data-act="loop" title="Repeat this line">🔁</button>
+        ${L.text ? `<button class="btn ghost small" data-act="say" title="Hear it spoken">🔊</button>` : ""}
+        ${L.en ? `<span class="gloss">${esc(L.en)}</span>` : ""}</div>
+      <div class="cells">${cells}</div></div>`;
+  }).join("");
+  sh.querySelectorAll(".line").forEach(el => {
+    const li = +el.dataset.l;
+    el.querySelectorAll("[data-act]").forEach(b => b.onclick = () => {
+      const a = b.dataset.act;
+      if (a === "play") play(li, li, false);
+      if (a === "loop") play(li, li, true);
+      if (a === "say") say(model.lines[li].text);
+    });
+  });
+  // tap a note to hear it
+  sh.querySelectorAll(".c[data-i]").forEach(c => c.onclick = () => { const t = model.events[+c.dataset.i]; if (t.midi) blip(t.midi); });
+}
+
+let staffEls = [];
+function renderStaff(){
+  const k = model.key;
+  const len = b => { const u = b * 2; return u === 1 ? "" : Number.isInteger(u) ? String(u) : u === 0.5 ? "/" : u === 1.5 ? "3/2" : String(u); };
+  const pitch = t => {
+    if (!t.deg) return "z";
+    let s = t.abcOct >= 5 ? t.abcLetter.toLowerCase() : t.abcLetter;
+    if (t.abcOct >= 6) s += "'".repeat(t.abcOct - 5);
+    if (t.abcOct <= 3) s += ",".repeat(4 - t.abcOct);
+    return s;
+  };
+  let abc = `X:1\nM:${song.time}\nL:1/8\nQ:1/4=${song.tempo}\nK:${k.abc}\n`;
+  model.lines.forEach(L => {
+    let body = "", words = [];
+    L.toks.forEach((t, j) => {
+      if (t.bar){ body += t.bar === "||" ? " |]" : " |"; return; }
+      // eighths that follow each other are written without a space, so abcjs beams them
+      if (body && !(t.sub && prevShort)) body += " ";
+      body += pitch(t) + len(t.beats);
+      prevShort = !!t.sub;
+      if (t.deg) words.push(t.hold ? "_" : (t.py || "*").replace(/[\s|-]/g, ""));
+    });
+    prevShort = false;
+    abc += body + "\n";
+    if (words.some(w => w !== "*" && w !== "_")) abc += "w: " + words.join(" ") + "\n";
+  });
+  try {
+    const w = Math.max(280, Math.min(740, $("#staff").clientWidth - 4));
+    ABCJS.renderAbc("staff", abc, { add_classes:true, staffwidth:w, scale: w < 500 ? 0.95 : 1.1, paddingleft:0, paddingright:0, paddingtop:0 });
+    staffEls = Array.from(document.querySelectorAll("#staff .abcjs-note, #staff .abcjs-rest"));
+  } catch(e){ $("#staff").textContent = "Staff notation could not be drawn."; staffEls = []; }
+}
+let prevShort = false;
+
+/* ---------- audio ---------- */
+let ctx = null, master = null, voices = [], run = null;
+function audio(){
+  if (!ctx){ const AC = window.AudioContext || window.webkitAudioContext; ctx = new AC(); }
+  if (ctx.state === "suspended") ctx.resume();
+  return ctx;
+}
+const hz = m => 440 * Math.pow(2, (m - 69) / 12);
+function tone(midi, at, dur, out, vol = 0.22){
+  const o = ctx.createOscillator(), o2 = ctx.createOscillator(), g = ctx.createGain();
+  o.type = "triangle"; o2.type = "sine";
+  o.frequency.value = hz(midi); o2.frequency.value = hz(midi) * 2;
+  const g2 = ctx.createGain(); g2.gain.value = 0.15;
+  o.connect(g); o2.connect(g2); g2.connect(g); g.connect(out);
+  const end = at + Math.max(0.08, dur * 0.92);
+  g.gain.setValueAtTime(0, at);
+  g.gain.linearRampToValueAtTime(vol, at + 0.02);
+  g.gain.exponentialRampToValueAtTime(vol * 0.55, at + Math.min(0.4, dur * 0.6));
+  g.gain.setValueAtTime(vol * 0.55, end - 0.04);
+  g.gain.linearRampToValueAtTime(0.0001, end);
+  o.start(at); o2.start(at); o.stop(end + 0.02); o2.stop(end + 0.02);
+  return [o, o2];
+}
+function click(at, out, strong){
+  const o = ctx.createOscillator(), g = ctx.createGain();
+  o.frequency.value = strong ? 1600 : 1100; o.type = "square";
+  g.gain.setValueAtTime(0.08, at); g.gain.exponentialRampToValueAtTime(0.0001, at + 0.05);
+  o.connect(g); g.connect(out); o.start(at); o.stop(at + 0.06);
+  return [o];
+}
+function blip(midi){ audio(); const out = ctx.createGain(); out.connect(ctx.destination); tone(midi, ctx.currentTime + 0.01, 0.5, out); }
+
+function play(fromLine = 0, toLine = model.lines.length - 1, loop = false){
+  stop();
+  audio();
+  const speed = +$("#speed").value / 100;
+  const spb = 60 / (song.tempo * speed);             // seconds per quarter beat
+  const b0 = model.lines[fromLine].start, b1 = model.lines[toLine].end;
+  const evs = model.events.filter(t => t.start >= b0 && t.start < b1);
+  master = ctx.createGain(); master.connect(ctx.destination);
+  const schedule = (t0, withCount) => {
+    let start = t0;
+    if (withCount){
+      const n = model.bpb * (4 / model.unit);
+      for (let i = 0; i < n; i++) voices.push(...click(start + i * spb, master, i === 0));
+      start += n * spb;
+    }
+    if ($("#melody").checked) evs.forEach(t => { if (t.midi) voices.push(...tone(t.midi, start + (t.start - b0) * spb, t.beats * spb, master)); });
+    return start;
+  };
+  const t0 = schedule(ctx.currentTime + 0.12, $("#countin").checked);
+  run = { evs, b0, b1, spb, t0, loop, fromLine };
+  document.querySelectorAll(".line").forEach(el => el.classList.toggle("looping", loop && +el.dataset.l === fromLine));
+  $("#play").textContent = "⏸ Pause";
+  tick();
+}
+function tick(){
+  if (!run) return;
+  const beat = run.b0 + (ctx.currentTime - run.t0) / run.spb;
+  if (beat >= run.b1){
+    if (run.loop){ run.t0 = schedule2(); }
+    else { stop(); return; }
+  }
+  const cur = beat < run.b0 ? null : run.evs.find(t => beat >= t.start && beat < t.start + t.beats);
+  highlight(cur ? cur.i : -1);
+  requestAnimationFrame(tick);
+}
+function schedule2(){
+  // next pass of a loop: one beat of breath, no count-in
+  const start = ctx.currentTime + run.spb;
+  if ($("#melody").checked) run.evs.forEach(t => { if (t.midi) voices.push(...tone(t.midi, start + (t.start - run.b0) * run.spb, t.beats * run.spb, master)); });
+  voices = voices.slice(-400);
+  return start;
+}
+let lastHi = -2;
+function highlight(i){
+  if (i === lastHi) return;
+  lastHi = i;
+  document.querySelectorAll(".c.on").forEach(c => c.classList.remove("on"));
+  staffEls.forEach(e => e.classList.remove("on"));
+  if (i < 0) return;
+  const cells = document.querySelectorAll(`.c[data-i="${i}"]`);
+  cells.forEach(c => c.classList.add("on"));
+  if (cells[0]){
+    const r = cells[0].getBoundingClientRect();
+    if (r.top < 60 || r.bottom > innerHeight - 110) cells[0].scrollIntoView({ block:"center", behavior:"smooth" });
+  }
+  if (staffEls[i]) staffEls[i].classList.add("on");
+}
+function stop(){
+  if (master){ try { master.gain.setValueAtTime(0, ctx.currentTime); master.disconnect(); } catch(e){} }
+  voices.forEach(v => { try { v.stop(); } catch(e){} });
+  voices = []; master = null; run = null;
+  highlight(-1);
+  document.querySelectorAll(".line.looping").forEach(el => el.classList.remove("looping"));
+  $("#play").textContent = "▶ Play";
+}
+function say(text){
+  try {
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = "zh-CN"; u.rate = 0.7;
+    const v = speechSynthesis.getVoices().find(v => /^zh(-|_)?(CN|Hans)?/i.test(v.lang));
+    if (v) u.voice = v;
+    speechSynthesis.cancel(); speechSynthesis.speak(u);
+  } catch(e){}
+}
+
+$("#play").onclick = () => run ? stop() : play();
+$("#stop").onclick = stop;
+$("#speed").value = store.get("sing-speed", 75);
+$("#spv").textContent = $("#speed").value + "%";
+$("#speed").oninput = () => { $("#spv").textContent = $("#speed").value + "%"; store.set("sing-speed", +$("#speed").value); };
+let rw = 0; window.addEventListener("resize", () => { if (!model || Math.abs(innerWidth - rw) < 40) return; rw = innerWidth; renderStaff(); });
+window.addEventListener("hashchange", () => { const id = (location.hash.match(/song=([\w-]+)/) || [])[1]; if (id && song && id !== song.id && SONGS.find(s => s.id === id)) pick(id); });
+loadSongs();
+</script>
+</body>
+</html>
