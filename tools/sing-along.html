@@ -56,8 +56,8 @@ textarea{font-family:var(--hanzi);font-size:18px;width:100%;min-height:150px;bor
 .ltools .gloss{font-size:13px;color:var(--muted);margin-left:4px}
 .cells{display:flex;flex-wrap:wrap;align-items:flex-start;row-gap:10px}
 .grp{display:flex;flex-wrap:nowrap;align-items:flex-start}
-.c{display:flex;flex-direction:column;align-items:center;min-width:38px;padding:2px 1px;border-radius:8px;cursor:pointer;user-select:none}
-.c.bar{min-width:14px;cursor:default}
+.c{display:flex;flex-direction:column;align-items:center;min-width:33px;padding:2px 1px;border-radius:8px;cursor:pointer;user-select:none}
+.c.bar{min-width:10px;cursor:default}
 .c.on{background:var(--seal-soft)}
 .c.on .hz{color:var(--seal)}
 .jp{display:flex;flex-direction:column;align-items:center;font-family:var(--mono);font-size:21px;font-weight:600;line-height:1;height:46px;justify-content:flex-start}
@@ -164,8 +164,9 @@ const MAJOR = [0,2,4,5,7,9,11];
 function keyInfo(k){
   const m = /^([A-G])(b|#)?$/.exec(k) || ["","C",""];
   const letter = m[1], acc = m[2] === "b" ? -1 : m[2] === "#" ? 1 : 0;
-  // tonic around F4..E5 is too high for low keys; keep tonic in octave 4 (C4..B4)
-  return { letter, li: LETTERS.indexOf(letter), midi: 60 + NATURAL[letter] + acc, name: letter + (acc < 0 ? "♭" : acc > 0 ? "♯" : ""), abc: letter + (m[2] || "") };
+  // "do" sits between G3 and F#4, so songs stay in an easy singing range
+  const li = LETTERS.indexOf(letter), oct = li >= 4 ? 3 : 4;
+  return { letter, li, oct, midi: 12 * (oct + 1) + NATURAL[letter] + acc, name: letter + (acc < 0 ? "♭" : acc > 0 ? "♯" : ""), abc: letter + (m[2] || "") };
 }
 
 /* ---------- parse a line of jianpu tokens ---------- */
@@ -244,7 +245,7 @@ function buildModel(s){
       t.midi = t.deg ? k.midi + MAJOR[t.deg - 1] + 12 * t.oct : null;
       // abc letter + octave
       if (t.deg){
-        const abs = 4 * 7 + k.li + (t.deg - 1) + 7 * t.oct;
+        const abs = k.oct * 7 + k.li + (t.deg - 1) + 7 * t.oct;
         t.abcLetter = LETTERS[abs % 7]; t.abcOct = Math.floor(abs / 7);
       }
       events.push(t);
