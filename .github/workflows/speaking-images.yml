@@ -37,6 +37,7 @@ jobs:
         if: ${{ env.HAS_KEY == 'true' }}
         env:
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          OPENROUTER_API_KEY_FIRST: ${{ secrets.OPENROUTER_API_KEY_FIRST }}
         run: node scripts/gen-images.mjs ${{ inputs.force && '--force' || '' }} ${{ inputs.ids }}
       - name: Shrink to 640 px WebP
         if: ${{ env.HAS_KEY == 'true' }}

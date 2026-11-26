@@ -1,11 +1,25 @@
 // Generates the speaking-trainer pictures with OpenRouter.
 // Usage: OPENROUTER_API_KEY=... node scripts/gen-images.mjs [--force] [id ...]
+// Optional OPENROUTER_API_KEY_FIRST is spent first; on 402 (out of credit) it switches to OPENROUTER_API_KEY.
 // Writes img/speaking/<id>.png; existing files are skipped unless --force.
 import { readFile, writeFile, mkdir, access } from "node:fs/promises";
 
-const KEY = process.env.OPENROUTER_API_KEY;
+const KEYS = [process.env.OPENROUTER_API_KEY_FIRST, process.env.OPENROUTER_API_KEY]
+  .map(k => (k || "").trim()).filter((k, i, a) => k && a.indexOf(k) === i);
 const MODEL = process.env.IMAGE_MODEL || "google/gemini-3.1-flash-image";
-if (!KEY) { console.error("OPENROUTER_API_KEY is not set"); process.exit(1); }
+if (!KEYS.length) { console.error("OPENROUTER_API_KEY is not set"); process.exit(1); }
+let k = 0;
+async function ask(body) {
+  for (;;) {
+    const r = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers: { "Authorization": `Bearer ${KEYS[k]}`, "Content-Type": "application/json",
+                 "HTTP-Referer": "https://xn--iqru82bwkw.xn--rhqv96g/learning-journey/", "X-Title": "Step by Step speaking trainer" },
+      body: JSON.stringify(body) });
+    if (r.status === 402 && k < KEYS.length - 1) { console.log("key out of credit, switching to the next key"); k++; continue; }
+    return r;
+  }
+}
 
 const args = process.argv.slice(2);
 const force = args.includes("--force");
@@ -25,14 +39,9 @@ for (const s of scenes) {
   const out = `img/speaking/${s.id}.png`;
   if (!force && (await exists(out) || await exists(out.replace(".png", ".webp")))) { console.log("skip", s.id); continue; }
   try {
-    const r = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-      method: "POST",
-      headers: { "Authorization": `Bearer ${KEY}`, "Content-Type": "application/json",
-                 "HTTP-Referer": "https://xn--iqru82bwkw.xn--rhqv96g/learning-journey/", "X-Title": "Step by Step speaking trainer" },
-      body: JSON.stringify({ model: MODEL, modalities: ["image", "text"],
-        messages: [{ role: "user", content: `${STYLE}\nScene: ${s.prompt}.` }],
-        image_config: { aspect_ratio: "1:1" } })
-    });
+    const r = await ask({ model: MODEL, modalities: ["image", "text"],
+      messages: [{ role: "user", content: `${STYLE}\nScene: ${s.prompt}.` }],
+      image_config: { aspect_ratio: "1:1" } });
     const j = await r.json();
     if (!r.ok) throw new Error(JSON.stringify(j.error || j).slice(0, 300));
     const url = j.choices?.[0]?.message?.images?.[0]?.image_url?.url;
